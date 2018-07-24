@@ -1,0 +1,85 @@
+name:                trade-secrets
+version:             0.1.0.0
+category:            Web
+author:              Slant Team
+maintainer:          founders@slant.co
+copyright:           2018 Parli, Inc.
+license:             AllRightsReserved
+
+ghc-options:
+- -Wall
+
+dependencies:
+- base
+- rio
+- contravariant
+- mtl
+- template-haskell
+- aeson
+- cassava
+- clock
+- data-default
+- datadog
+- http-types
+- lens
+- magicbane
+- safe-foldable
+- statistics
+- time
+- wai
+- wai-extra
+
+default-extensions:
+- AutoDeriveTypeable
+- BangPatterns
+- BinaryLiterals
+- ConstraintKinds
+- DataKinds
+- DefaultSignatures
+- DeriveAnyClass
+- DeriveDataTypeable
+- DeriveFoldable
+- DeriveFunctor
+- DeriveGeneric
+- DeriveLift
+- DeriveTraversable
+- DerivingStrategies
+- DisambiguateRecordFields
+- DoAndIfThenElse
+- EmptyCase
+- EmptyDataDecls
+- ExistentialQuantification
+- ExplicitNamespaces
+- FlexibleContexts
+- FlexibleInstances
+- FunctionalDependencies
+- GADTs
+# - GeneralizedNewtypeDeriving
+- InstanceSigs
+- KindSignatures
+- LambdaCase
+- MonadComprehensions
+- MultiParamTypeClasses
+- MultiWayIf
+- NamedFieldPuns
+- NoImplicitPrelude
+- OverloadedStrings
+- ParallelListComp
+- PartialTypeSignatures
+- PatternGuards
+- PatternSynonyms
+- PolyKinds
+- RankNTypes
+- RecordWildCards
+- RecursiveDo
+- ScopedTypeVariables
+- StandaloneDeriving
+- TupleSections
+- TypeApplications
+- TypeFamilies
+- TypeOperators
+- TypeSynonymInstances
+- ViewPatterns
+
+library:
+  source-dirs: src
