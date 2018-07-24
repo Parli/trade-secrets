@@ -5,7 +5,7 @@ extra-deps:
 - archive: https://github.com/commercialhaskell/rio/archive/db8c1a9f7b3ae08844d9da3a090a42ccc2d33fde.zip
   subdirs:
   - rio
-  - rio-orphans
+  # - rio-orphans
 
 packages:
 - .

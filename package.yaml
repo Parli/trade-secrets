@@ -12,12 +12,12 @@ ghc-options:
 dependencies:
 - base
 - rio
-- contravariant
-- mtl
 - template-haskell
+
 - aeson
 - cassava
 - clock
+- contravariant
 - data-default
 - datadog
 - http-types
