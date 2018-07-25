@@ -1,23 +1,35 @@
-module Parli.InputRow
-( Input, Record, Definition, VocabularyList
-, ProtoTruth(..)
-, defineFeatures
-, makeFeatures
+module Parli.Truth
+( ProtoTruth(..), Truth(..)
+, fakeNews, lexicon, distill
 ) where
 
 import           RIO hiding (product)
 import qualified RIO.Map as M
 
-import           Parli.InputRow.Features
-import           Parli.InputRow.Makers
-import           Parli.InputRow.Types
-import qualified Parli.Normalizer.Types.Response as N
+import qualified Parli.Normalizer.Types as N
 
-defineFeatures :: VocabularyList -> Input Definition Text
-defineFeatures = defineInput . trueFeatures . lexicon
+data ProtoTruth = ProtoTruth
+  { protoEpoch        :: Int
+  , protoVocabularies :: N.VocabularyList
+  , protoQuestion     :: N.Analysis
+  , protoEntities     :: N.Entities
+  , protoPrice        :: N.Currency
+  } deriving (Show)
 
-makeFeatures :: ProtoTruth -> Input Record ()
-makeFeatures = (makeInput <*> trueFeatures) . distill
+data Truth = Truth
+  { trueEpoch        :: Int
+  , trueVocabularies :: N.VocabularyList
+  , trueQuestion     :: N.Analysis
+  , trueProduct      :: N.Product
+  , trueRatings      :: [N.Rating]
+  , trueCrawls       :: Map Text N.Crawl
+  } deriving (Show)
+
+fakeNews :: Truth
+fakeNews = Truth 0 mempty N.emptyAnalysis N.emptyProduct mempty mempty
+
+lexicon :: N.VocabularyList -> Truth
+lexicon vocabularies = fakeNews{ trueVocabularies = vocabularies }
 
 distill :: ProtoTruth -> Truth
 distill proto = fromMaybe (lexicon vocab) $ do
@@ -41,14 +53,3 @@ collapse
   where
     latest = if xA > yA then x else y
     crawlEarliest = min xE yE
-
-data ProtoTruth = ProtoTruth
-  { protoEpoch        :: Int
-  , protoVocabularies :: VocabularyList
-  , protoQuestion     :: N.Analysis
-  , protoEntities     :: N.Entities
-  , protoPrice        :: N.Currency
-  } deriving (Show)
-
-lexicon :: VocabularyList -> Truth
-lexicon vocabularies = fakeNews{ trueVocabularies = vocabularies }

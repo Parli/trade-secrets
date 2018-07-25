@@ -18,7 +18,7 @@ module Parli.Normalizer.Types.Response
 import RIO
 
 import Data.Aeson
-import Data.Aeson.Types (Parser)
+import Data.Aeson.Types
 import Data.Monoid (Alt(..))
 
 data Response = Response

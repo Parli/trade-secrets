@@ -12,10 +12,8 @@ import qualified RIO.Text as T
 import Data.Aeson
 import Network.HTTP.Types
 
-import Parli.InputRow.Types
 import Parli.Normalizer.Internal
-import Parli.Normalizer.Types.Environment
-import Parli.Normalizer.Types.Response
+import Parli.Normalizer.Types
 
 data RatingsRequest = RatingsRequest
   { before   :: Int
