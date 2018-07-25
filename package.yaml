@@ -4,6 +4,7 @@ category:            Web
 author:              Slant Team
 maintainer:          founders@slant.co
 copyright:           2018 Parli, Inc.
+github:              Parli/trade-secrets
 license:             AllRightsReserved
 
 ghc-options:
