@@ -93,13 +93,15 @@ instance Monoid Entities where
   mappend = (<>)
 
 data Crawl = Crawl
-  { crawlId       :: Text
-  , crawlPageId   :: Text
-  , crawlSourceId :: Text
-  , crawlUrl      :: Text
-  , crawlType     :: CrawlType
-  , crawlAccessed :: Int
-  , crawlEarliest :: Int
+  { crawlId        :: Text
+  , crawlPageId    :: Text
+  , crawlSourceId  :: Text
+  , crawlUrl       :: Text
+  , crawlType      :: CrawlType
+  , crawlAccessed  :: Int
+  , crawlPublished :: Maybe Int
+  , crawlUpdated   :: Maybe Int
+  , crawlEarliest  :: Int
   } deriving (Show)
 instance FromJSON Crawl where
   parseJSON = withObject "crawls" $ \v -> do
@@ -114,7 +116,7 @@ instance FromJSON Crawl where
     let
       earliestish = getAlt $ Alt published' <> Alt updated'
       earliest' = maybe accessed' id earliestish
-    pure $ Crawl id' pageId' sourceId' url' type' accessed' earliest'
+    pure $ Crawl id' pageId' sourceId' url' type' accessed' published' updated' earliest'
 
 data CrawlType
   = CrawlTypeReview
