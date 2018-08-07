@@ -236,7 +236,7 @@ emptyEntities :: Entities
 emptyEntities = mempty
 
 emptyPriceIntent :: PriceIntent
-emptyPriceIntent = PriceIntent emptyCurrency ""
+emptyPriceIntent = PriceIntent emptyCurrency "none"
 
 emptyCurrency :: Currency
 emptyCurrency = Currency "XXX" 0
