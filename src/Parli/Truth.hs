@@ -1,6 +1,7 @@
 module Parli.Truth
-( ProtoTruth(..), Truth(..)
-, fakeNews, lexicon, distill
+( ProtoTruth(..), dogma
+, Truth(..), fakeNews, lexicon
+, distill
 ) where
 
 import           RIO hiding (product)
@@ -15,6 +16,10 @@ data ProtoTruth = ProtoTruth
   , protoEntities     :: N.Entities
   , protoPrice        :: N.Currency
   } deriving (Show)
+
+dogma :: N.VocabularyList -> ProtoTruth
+dogma vocabularies =
+  ProtoTruth 0 vocabularies N.emptyAnalysis N.emptyEntities N.emptyCurrency
 
 data Truth = Truth
   { trueEpoch        :: Int
