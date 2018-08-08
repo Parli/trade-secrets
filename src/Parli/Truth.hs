@@ -42,11 +42,13 @@ distill proto = fromMaybe (lexicon vocab) $ do
   let product = p{N.productPrice = price}
   pure $ Truth epoch vocab question product ratings crawls
   where
+    ratings = M.elems . M.filter cromulent $ allRatings
+    cromulent rating = M.member (N.ratingCrawlId rating) crawls
     crawls = M.fromList $ (N.crawlId &&& id) <$> M.elems collapsed
-    collapsed = M.fromListWith collapse
-      $ (N.crawlPageId &&& id) <$> M.elems allCrawls
-    ratings = M.elems . M.filter okay $ allRatings
-    okay rating = M.member (N.ratingCrawlId rating) crawls
+    collapsed = M.fromListWith collapse indexedCrawls
+    indexedCrawls = (N.crawlPageId &&& id) <$> relevantCrawls
+    relevantCrawls = filter nonFuture $ M.elems allCrawls
+    nonFuture crawl = epoch >= N.crawlAccessed crawl
     (ProtoTruth epoch vocab question entities price) = proto
     (N.Entities allProducts allRatings allCrawls) = entities
 
