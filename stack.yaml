@@ -1,12 +1,13 @@
-resolver: lts-11.18
+resolver: lts-11.20
 
 extra-deps:
 - safe-foldable-0.1.0.0
+- rio-orphans-0.1.1.0
 - https://github.com/myfreeweb/magicbane/archive/3fc27fd3d96749ad31c1654d822dbb3d09461459.zip
-- archive: https://github.com/commercialhaskell/rio/archive/db8c1a9f7b3ae08844d9da3a090a42ccc2d33fde.zip
-  subdirs:
-  - rio
-  - rio-orphans
+# - archive: https://github.com/commercialhaskell/rio/archive/db8c1a9f7b3ae08844d9da3a090a42ccc2d33fde.zip
+#   subdirs:
+#   - rio
+#   - rio-orphans
 
 packages:
 - .
