@@ -44,12 +44,12 @@ data JuxStore e q = JuxStore
   , juxResponses  :: JuxIdMap q (JuxQueryResponse q) Identity
   , juxTypes      :: JuxTypeMap e
   } deriving (Generic, Typeable)
-instance (JuxEntityType e, JuxEntityType q) => Semigroup (JuxStore e q) where
+instance (JuxEntityType e, JuxQueryType q) => Semigroup (JuxStore e q) where
   (JuxStore a1 e1 q1 r1 t1) <> (JuxStore a2 e2 q2 r2 t2)
     = JuxStore -- favor keys in right-hand argument
       (HM.union a2 a1) (HM.union e2 e1)
       (HM.union q2 q1) (HM.union r2 r1)
       (HM.union t2 t1)
-instance (JuxEntityType e, JuxEntityType q) => Monoid (JuxStore e q) where
+instance (JuxEntityType e, JuxQueryType q) => Monoid (JuxStore e q) where
   mempty = JuxStore mempty mempty mempty mempty mempty
   mappend = (<>)
