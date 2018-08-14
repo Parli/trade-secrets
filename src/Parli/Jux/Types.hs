@@ -30,6 +30,7 @@ class
 
 type JuxRawId = Text
 type JuxIdMap a b f = HashMap (JuxId a) (f b)
+type JuxTypeMap a = HashMap JuxRawId a
 
 data JuxId a = JuxId
   { juxType  :: a
@@ -41,7 +42,7 @@ data JuxStore e q = JuxStore
   , juxEntities   :: JuxIdMap e (JuxEntityData e) Identity
   , juxQueries    :: JuxIdMap q (JuxQueryRequest q) Identity
   , juxResponses  :: JuxIdMap q (JuxQueryResponse q) Identity
-  , juxTypes      :: HashMap JuxRawId e
+  , juxTypes      :: JuxTypeMap e
   } deriving (Generic, Typeable)
 instance (JuxEntityType e, JuxEntityType q) => Semigroup (JuxStore e q) where
   (JuxStore a1 e1 q1 r1 t1) <> (JuxStore a2 e2 q2 r2 t2)

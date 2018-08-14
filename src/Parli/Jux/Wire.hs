@@ -14,7 +14,7 @@ data JuxWire e q = JuxWire
   , entities   :: JuxWireMap e (JuxEntityData e)
   , queries    :: JuxWireMap q (JuxQueryRequest q)
   , responses  :: JuxWireMap q (JuxQueryResponse q)
-  , types      :: HashMap JuxRawId e
+  , types      :: JuxTypeMap e
   } deriving (Generic, Typeable)
 deriving instance (JuxEntityType e, JuxQueryType q) => ToJSON (JuxWire e q)
 deriving instance (JuxEntityType e, JuxQueryType q) => FromJSON (JuxWire e q)
