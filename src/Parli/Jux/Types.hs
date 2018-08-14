@@ -53,3 +53,23 @@ instance (JuxEntityType e, JuxQueryType q) => Semigroup (JuxStore e q) where
 instance (JuxEntityType e, JuxQueryType q) => Monoid (JuxStore e q) where
   mempty = JuxStore mempty mempty mempty mempty mempty
   mappend = (<>)
+
+attributesStore :: (JuxEntityType e, JuxQueryType q)
+  => JuxIdMap (JuxAttributeType e) (JuxAttributeData e) Identity -> JuxStore e q
+attributesStore xs = mempty { juxAttributes = xs }
+
+entitiesStore :: (JuxEntityType e, JuxQueryType q)
+  => JuxIdMap e (JuxEntityData e) Identity -> JuxStore e q
+entitiesStore xs = mempty { juxEntities = xs }
+
+queriesStore :: (JuxEntityType e, JuxQueryType q)
+  => JuxIdMap q (JuxQueryRequest q) Identity -> JuxStore e q
+queriesStore xs = mempty { juxQueries = xs }
+
+responsesStore :: (JuxEntityType e, JuxQueryType q)
+  => JuxIdMap q (JuxQueryResponse q) Identity -> JuxStore e q
+responsesStore xs = mempty { juxResponses = xs }
+
+typesStore :: (JuxEntityType e, JuxQueryType q)
+  => JuxTypeMap e -> JuxStore e q
+typesStore xs = mempty { juxTypes = xs }
