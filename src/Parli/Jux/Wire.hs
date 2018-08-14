@@ -7,7 +7,6 @@ import           Data.Aeson
 import           Parli.Jux.Types
 import           RIO
 import qualified RIO.HashMap as HM
-import qualified RIO.HashSet as HS
 
 type JuxWireMap l v = HashMap l (HashMap JuxRawId v)
 data JuxWire e q = JuxWire
@@ -20,25 +19,27 @@ data JuxWire e q = JuxWire
 deriving instance (JuxEntityType e, JuxQueryType q) => ToJSON (JuxWire e q)
 deriving instance (JuxEntityType e, JuxQueryType q) => FromJSON (JuxWire e q)
 
-juxStoreToWire :: (JuxEntityType e, JuxEntityType q)
-  => JuxStore e q Identity -> JuxWire e q
-juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
+juxStoreToWire :: (JuxEntityType e, JuxEntityType q) => JuxStore e q -> JuxWire e q
+juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
   where
-    a' = undefined
-    e' = undefined
-    q' = undefined
-    r' = undefined
-    t' = undefined
+    a' = HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
+    e' = toWireMap e
+    q' = toWireMap q
+    r' = toWireMap r
+    toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
+    toWireMap = HM.fromList . toWirePairs
+    toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
+    toWirePair = (juxType &&& juxRawId) *** runIdentity
+    embedMap (l, k) = (l,) . HM.singleton k
+    toWireAttributePair = getJuxAttributeEntityType . fst &&& uncurry HM.singleton
 
-juxWireToStore :: (JuxEntityType e, JuxEntityType q)
-  => JuxWire e q -> JuxStore e q Identity
-juxWireToStore (JuxWire a' e' q' r' t') = JuxStore a e q r t
+juxWireToStore :: (JuxEntityType e, JuxEntityType q) => JuxWire e q -> JuxStore e q
+juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
   where
-    a = toJuxIdMap . fold . HM.elems $ a'
-    e = toJuxIdMap e'
-    q = toJuxIdMap q'
-    r = toJuxIdMap r'
-    t = HS.fromList . fmap (uncurry $ flip JuxId) $ HM.toList t'
-    toJuxIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
-    toJuxIdMap = HM.fromList . concatMap (uncurry toJuxId) . HM.toList
-    toJuxId k = fmap (JuxId k *** Identity) . HM.toList
+    a' = toIdMap . fold . HM.elems $ a
+    e' = toIdMap e
+    q' = toIdMap q
+    r' = toIdMap r
+    toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
+    toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList
+    toIdPair k = fmap (JuxId k *** Identity) . HM.toList
