@@ -14,12 +14,12 @@ data JuxWire e q = JuxWire
   , entities   :: JuxWireMap e (JuxEntityData e)
   , queries    :: JuxWireMap q (JuxQueryRequest q)
   , responses  :: JuxWireMap q (JuxQueryResponse q)
-  , types      :: JuxTypeMap e
+  , types      :: JuxTypes e
   } deriving (Generic, Typeable)
-deriving instance (JuxEntityType e, JuxQueryType q) => ToJSON (JuxWire e q)
-deriving instance (JuxEntityType e, JuxQueryType q) => FromJSON (JuxWire e q)
+deriving instance JuxStoreType e q => ToJSON (JuxWire e q)
+deriving instance JuxStoreType e q => FromJSON (JuxWire e q)
 
-juxStoreToWire :: (JuxEntityType e, JuxEntityType q) => JuxStore e q -> JuxWire e q
+juxStoreToWire :: JuxStoreType e q => JuxStore e q -> JuxWire e q
 juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
   where
     a' = HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
@@ -33,7 +33,7 @@ juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
     embedMap (l, k) = (l,) . HM.singleton k
     toWireAttributePair = getJuxAttributeEntityType . fst &&& uncurry HM.singleton
 
-juxWireToStore :: (JuxEntityType e, JuxEntityType q) => JuxWire e q -> JuxStore e q
+juxWireToStore :: JuxStoreType e q => JuxWire e q -> JuxStore e q
 juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
   where
     a' = toIdMap . fold . HM.elems $ a

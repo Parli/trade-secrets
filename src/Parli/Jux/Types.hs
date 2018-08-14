@@ -29,47 +29,43 @@ class
   getJuxResponseQuery :: JuxQueryResponse a -> a
 
 type JuxRawId = Text
-type JuxIdMap a b f = HashMap (JuxId a) (f b)
-type JuxTypeMap a = HashMap JuxRawId a
-
 data JuxId a = JuxId
   { juxType  :: a
   , juxRawId :: JuxRawId
   } deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable)
 
+type JuxIdMap a b f = HashMap (JuxId a) (f b)
+type JuxAttributes e f = JuxIdMap (JuxAttributeType e) (JuxAttributeData e) f
+type JuxEntities e f = JuxIdMap e (JuxEntityData e) f
+type JuxQueries q f = JuxIdMap q (JuxQueryRequest q) f
+type JuxResponses q f = JuxIdMap q (JuxQueryResponse q) f
+type JuxTypes a = HashMap JuxRawId a
+
+type JuxStoreType e q = (JuxEntityType e, JuxQueryType q)
 data JuxStore e q = JuxStore
-  { juxAttributes :: JuxIdMap (JuxAttributeType e) (JuxAttributeData e) Identity
-  , juxEntities   :: JuxIdMap e (JuxEntityData e) Identity
-  , juxQueries    :: JuxIdMap q (JuxQueryRequest q) Identity
-  , juxResponses  :: JuxIdMap q (JuxQueryResponse q) Identity
-  , juxTypes      :: JuxTypeMap e
+  { juxAttributes :: JuxAttributes e Identity
+  , juxEntities   :: JuxEntities e Identity
+  , juxQueries    :: JuxQueries q Identity
+  , juxResponses  :: JuxResponses q Identity
+  , juxTypes      :: JuxTypes e
   } deriving (Generic, Typeable)
-instance (JuxEntityType e, JuxQueryType q) => Semigroup (JuxStore e q) where
+instance JuxStoreType e q => Semigroup (JuxStore e q) where
   (JuxStore a1 e1 q1 r1 t1) <> (JuxStore a2 e2 q2 r2 t2)
     = JuxStore -- favor keys in right-hand argument
       (HM.union a2 a1) (HM.union e2 e1)
       (HM.union q2 q1) (HM.union r2 r1)
       (HM.union t2 t1)
-instance (JuxEntityType e, JuxQueryType q) => Monoid (JuxStore e q) where
+instance JuxStoreType e q => Monoid (JuxStore e q) where
   mempty = JuxStore mempty mempty mempty mempty mempty
   mappend = (<>)
 
-attributesStore :: (JuxEntityType e, JuxQueryType q)
-  => JuxIdMap (JuxAttributeType e) (JuxAttributeData e) Identity -> JuxStore e q
+attributesStore :: JuxStoreType e q => JuxAttributes e Identity -> JuxStore e q
 attributesStore xs = mempty { juxAttributes = xs }
-
-entitiesStore :: (JuxEntityType e, JuxQueryType q)
-  => JuxIdMap e (JuxEntityData e) Identity -> JuxStore e q
+entitiesStore :: JuxStoreType e q => JuxEntities e Identity -> JuxStore e q
 entitiesStore xs = mempty { juxEntities = xs }
-
-queriesStore :: (JuxEntityType e, JuxQueryType q)
-  => JuxIdMap q (JuxQueryRequest q) Identity -> JuxStore e q
+queriesStore :: JuxStoreType e q => JuxQueries q Identity -> JuxStore e q
 queriesStore xs = mempty { juxQueries = xs }
-
-responsesStore :: (JuxEntityType e, JuxQueryType q)
-  => JuxIdMap q (JuxQueryResponse q) Identity -> JuxStore e q
+responsesStore :: JuxStoreType e q => JuxResponses q Identity -> JuxStore e q
 responsesStore xs = mempty { juxResponses = xs }
-
-typesStore :: (JuxEntityType e, JuxQueryType q)
-  => JuxTypeMap e -> JuxStore e q
+typesStore :: JuxStoreType e q => JuxTypes e -> JuxStore e q
 typesStore xs = mempty { juxTypes = xs }
