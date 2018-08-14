@@ -59,13 +59,13 @@ instance JuxStoreType e q => Monoid (JuxStore e q) where
   mempty = JuxStore mempty mempty mempty mempty mempty
   mappend = (<>)
 
-attributesStore :: JuxStoreType e q => JuxAttributes e Identity -> JuxStore e q
-attributesStore xs = mempty { juxAttributes = xs }
-entitiesStore :: JuxStoreType e q => JuxEntities e Identity -> JuxStore e q
-entitiesStore xs = mempty { juxEntities = xs }
-queriesStore :: JuxStoreType e q => JuxQueries q Identity -> JuxStore e q
-queriesStore xs = mempty { juxQueries = xs }
-responsesStore :: JuxStoreType e q => JuxResponses q Identity -> JuxStore e q
-responsesStore xs = mempty { juxResponses = xs }
-typesStore :: JuxStoreType e q => JuxTypes e -> JuxStore e q
-typesStore xs = mempty { juxTypes = xs }
+storeAttributes :: JuxStoreType e q => JuxAttributes e Identity -> JuxStore e q
+storeAttributes xs = mempty { juxAttributes = xs }
+storeEntities :: JuxStoreType e q => JuxEntities e Identity -> JuxStore e q
+storeEntities xs = mempty { juxEntities = xs }
+storeQueries :: JuxStoreType e q => JuxQueries q Identity -> JuxStore e q
+storeQueries xs = mempty { juxQueries = xs }
+storeResponses :: JuxStoreType e q => JuxResponses q Identity -> JuxStore e q
+storeResponses xs = mempty { juxResponses = xs }
+storeTypes :: JuxStoreType e q => JuxTypes e -> JuxStore e q
+storeTypes xs = mempty { juxTypes = xs }
