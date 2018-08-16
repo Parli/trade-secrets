@@ -45,6 +45,13 @@ juxTraverse action = sequence . HM.mapWithKey action
 juxResolve :: JuxIdMap a b Maybe -> JuxIdMap a b Identity
 juxResolve = HM.mapMaybe (fmap Identity)
 
+toAttributeId :: (a ~ JuxAttributeType e) => a -> JuxId e -> JuxId a
+toAttributeId a k = k { juxType = a }
+
+toEntityId :: (JuxEntityType e, a ~ JuxAttributeType e) => JuxId a -> JuxId e
+toEntityId k@JuxId{ juxType = a }
+  = k{ juxType = getJuxAttributeEntityType a }
+
 -- (de)serialization
 showJuxLabel :: (JuxLabel a) => a -> Text
 showJuxLabel = fromString . toQuietSnake . fromHumps . show
