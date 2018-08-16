@@ -1,8 +1,8 @@
 module Parli.Jux
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxRawId, JuxId(..)
-, JuxAttributes, JuxEntities, JuxQueries, JuxResponses, JuxTypes
-, JuxStore(..), JuxWire()
+, JuxRawId, JuxId(..), JuxIdMap
+, JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
+, JuxStore'(..), JuxWire'()
 , module Parli.Jux
 ) where
 
@@ -18,19 +18,19 @@ import Text.Read
 juxStorable :: (Hashable a) => JuxId a -> b -> JuxIdMap a b Identity
 juxStorable k = HM.singleton k . Identity
 
-storeAttributes :: JuxStoreType e q => JuxAttributes e Identity -> JuxStore e q
+storeAttributes :: JuxStoreType e q => JuxAttributes' e Identity -> JuxStore' e q
 storeAttributes xs = mempty { juxAttributes = xs }
-storeEntities :: JuxStoreType e q => JuxEntities e Identity -> JuxStore e q
+storeEntities :: JuxStoreType e q => JuxEntities' e Identity -> JuxStore' e q
 storeEntities xs = mempty { juxEntities = xs }
-storeQueries :: JuxStoreType e q => JuxQueries q Identity -> JuxStore e q
+storeQueries :: JuxStoreType e q => JuxQueries' q Identity -> JuxStore' e q
 storeQueries xs = mempty { juxQueries = xs }
-storeResponses :: JuxStoreType e q => JuxResponses q Identity -> JuxStore e q
+storeResponses :: JuxStoreType e q => JuxResponses' q Identity -> JuxStore' e q
 storeResponses xs = mempty { juxResponses = xs }
 
 juxStorableType :: (Hashable e) => JuxId e -> HashMap e Text
 juxStorableType = HM.singleton . juxType <*> juxRawId
 
-storeTypes :: JuxStoreType e q => JuxTypes e -> JuxStore e q
+storeTypes :: JuxStoreType e q => JuxTypes' e -> JuxStore' e q
 storeTypes xs = mempty { juxTypes = xs }
 
 -- constrained morphisms
@@ -54,7 +54,7 @@ readJuxLabel toError t = case reads s of
   _        -> Left (toError t)
   where s = toPascal . fromSnake . T.unpack $ t
 
-juxStoreToWire :: JuxStoreType e q => JuxStore e q -> JuxWire e q
+juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire' e q
 juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
   where
     a' = HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
@@ -68,7 +68,7 @@ juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
     embedMap (l, k) = (l,) . HM.singleton k
     toWireAttributePair = getJuxAttributeEntityType . fst &&& uncurry HM.singleton
 
-juxWireToStore :: JuxStoreType e q => JuxWire e q -> JuxStore e q
+juxWireToStore :: JuxStoreType e q => JuxWire' e q -> JuxStore' e q
 juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
   where
     a' = toIdMap . fold . HM.elems $ a
