@@ -1,8 +1,5 @@
 module Parli.Jux
-( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxRawId, JuxId(..), JuxIdMap
-, JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
-, JuxStore'(..), JuxWire'()
+( module Parli.Jux.Types
 , module Parli.Jux
 ) where
 
@@ -10,7 +7,9 @@ import           RIO
 import qualified RIO.HashMap as HM
 import qualified RIO.Text as T
 
+import Data.Aeson.TH
 import Data.Aeson.Types
+import Language.Haskell.TH
 import Parli.Jux.Types
 import Text.Casing
 import Text.Read
@@ -53,43 +52,22 @@ toEntityId k@JuxId{ juxType = a }
   = k{ juxType = getJuxAttributeEntityType a }
 
 -- (de)serialization
-showJuxLabel :: (JuxLabel a) => a -> Text
-showJuxLabel = fromString . toQuietSnake . fromHumps . show
+juxLabelToWire, juxWireToLabel :: String -> String
+juxLabelToWire = toQuietSnake . fromHumps
+juxWireToLabel = toPascal . fromSnake
+
+showJuxLabel :: (JuxLabel a, IsString s) => a -> s
+showJuxLabel = fromString . juxLabelToWire . show
 
 readJuxLabel :: (JuxLabel a) => (Text -> e) -> Text -> Either e a
 readJuxLabel toError t = case reads s of
   [(a,[])] -> Right a
   _        -> Left (toError t)
-  where s = toPascal . fromSnake . T.unpack $ t
+  where s = juxWireToLabel . T.unpack $ t
 
 juxReadError :: Text -> Text -> String
 juxReadError target source
   = "Could not read type "<> show target <>" from string "<> show source
-
-juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire' e q
-juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
-  where
-    a' = HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
-    e' = toWireMap e
-    q' = toWireMap q
-    r' = toWireMap r
-    toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
-    toWireMap = HM.fromList . toWirePairs
-    toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
-    toWirePair = (juxType &&& juxRawId) *** runIdentity
-    embedMap (l, k) = (l,) . HM.singleton k
-    toWireAttributePair = getJuxAttributeEntityType . fst &&& uncurry HM.singleton
-
-juxWireToStore :: JuxStoreType e q => JuxWire' e q -> JuxStore' e q
-juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
-  where
-    a' = toIdMap . fold . HM.elems $ a
-    e' = toIdMap e
-    q' = toIdMap q
-    r' = toIdMap r
-    toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
-    toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList
-    toIdPair k = fmap (JuxId k *** Identity) . HM.toList
 
 juxToJSONKey :: (JuxLabel a) => ToJSONKeyFunction a
 juxToJSONKey = toJSONKeyText showJuxLabel
@@ -97,3 +75,7 @@ juxToJSONKey = toJSONKeyText showJuxLabel
 juxFromJSONKey :: (JuxLabel a) => Text -> FromJSONKeyFunction a
 juxFromJSONKey target
   = FromJSONKeyText $ either error id . readJuxLabel (juxReadError target)
+
+deriveJuxLabelJSON :: Name -> DecsQ
+deriveJuxLabelJSON
+  = deriveJSON defaultOptions{constructorTagModifier = juxLabelToWire}
