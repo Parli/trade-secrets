@@ -28,8 +28,8 @@ storeQueries xs = mempty { juxQueries = xs }
 storeResponses :: JuxStoreType e q => JuxResponses' q Identity -> JuxStore' e q
 storeResponses xs = mempty { juxResponses = xs }
 
-juxStorableType :: (Hashable e) => JuxId e -> HashMap e Text
-juxStorableType = HM.singleton . juxType <*> juxRawId
+juxStorableType :: (Hashable e) => JuxId e -> HashMap Text e
+juxStorableType = HM.singleton . juxRawId <*> juxType
 
 storeTypes :: JuxStoreType e q => JuxTypes' e -> JuxStore' e q
 storeTypes xs = mempty { juxTypes = xs }
