@@ -6,7 +6,7 @@ import           RIO
 import qualified RIO.HashMap as HM
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a)
-type JuxLabel a = (JuxValue a, Hashable a, ToJSONKey a, FromJSONKey a)
+type JuxLabel a = (JuxValue a, Read a, Hashable a, ToJSONKey a, FromJSONKey a)
 
 class
   ( JuxLabel a, JuxLabel (JuxAttributeType a)
@@ -49,6 +49,7 @@ data JuxStore e q = JuxStore
   , juxResponses  :: JuxResponses q Identity
   , juxTypes      :: JuxTypes e
   } deriving (Generic, Typeable)
+deriving instance JuxStoreType e q => Show (JuxStore e q)
 instance JuxStoreType e q => Semigroup (JuxStore e q) where
   (JuxStore a1 e1 q1 r1 t1) <> (JuxStore a2 e2 q2 r2 t2)
     = JuxStore -- favor keys in right-hand argument
@@ -59,13 +60,14 @@ instance JuxStoreType e q => Monoid (JuxStore e q) where
   mempty = JuxStore mempty mempty mempty mempty mempty
   mappend = (<>)
 
-storeAttributes :: JuxStoreType e q => JuxAttributes e Identity -> JuxStore e q
-storeAttributes xs = mempty { juxAttributes = xs }
-storeEntities :: JuxStoreType e q => JuxEntities e Identity -> JuxStore e q
-storeEntities xs = mempty { juxEntities = xs }
-storeQueries :: JuxStoreType e q => JuxQueries q Identity -> JuxStore e q
-storeQueries xs = mempty { juxQueries = xs }
-storeResponses :: JuxStoreType e q => JuxResponses q Identity -> JuxStore e q
-storeResponses xs = mempty { juxResponses = xs }
-storeTypes :: JuxStoreType e q => JuxTypes e -> JuxStore e q
-storeTypes xs = mempty { juxTypes = xs }
+type JuxWireMap l v = HashMap l (HashMap JuxRawId v)
+data JuxWire e q = JuxWire
+  { attributes :: HashMap e (JuxWireMap (JuxAttributeType e) (JuxAttributeData e))
+  , entities   :: JuxWireMap e (JuxEntityData e)
+  , queries    :: JuxWireMap q (JuxQueryRequest q)
+  , responses  :: JuxWireMap q (JuxQueryResponse q)
+  , types      :: JuxTypes e
+  } deriving (Generic, Typeable)
+deriving instance JuxStoreType e q => Show (JuxWire e q)
+deriving instance JuxStoreType e q => ToJSON (JuxWire e q)
+deriving instance JuxStoreType e q => FromJSON (JuxWire e q)

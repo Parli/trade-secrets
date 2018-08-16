@@ -16,6 +16,7 @@ dependencies:
 - template-haskell
 
 - aeson
+- casing
 - cassava
 - clock
 - data-default
