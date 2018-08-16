@@ -10,6 +10,7 @@ import           RIO
 import qualified RIO.HashMap as HM
 import qualified RIO.Text as T
 
+import Data.Aeson.Types
 import Parli.Jux.Types
 import Text.Casing
 import Text.Read
@@ -54,6 +55,10 @@ readJuxLabel toError t = case reads s of
   _        -> Left (toError t)
   where s = toPascal . fromSnake . T.unpack $ t
 
+juxReadError :: Text -> Text -> String
+juxReadError target source
+  = "Could not read type "<> show target <>" from string "<> show source
+
 juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire' e q
 juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
   where
@@ -78,3 +83,10 @@ juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
     toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
     toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList
     toIdPair k = fmap (JuxId k *** Identity) . HM.toList
+
+juxToJSONKey :: (JuxLabel a) => ToJSONKeyFunction a
+juxToJSONKey = toJSONKeyText showJuxLabel
+
+juxFromJSONKey :: (JuxLabel a) => Text -> FromJSONKeyFunction a
+juxFromJSONKey target
+  = FromJSONKeyText $ either error id . readJuxLabel (juxReadError target)
