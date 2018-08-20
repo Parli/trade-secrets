@@ -38,35 +38,41 @@ instance Monoid Context where
   mappend = (<>)
 
 -- Entities: Product
-data Alias = Alias
-  { aliasId   :: JuxRawId
-  , aliasName :: Text
-  } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''Alias
+-- data Alias = Alias
+--   { aliasId   :: JuxRawId
+--   , aliasName :: Text
+--   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+-- deriveNormalizerObjectJSON ''Alias
 
-data ProductFamily = ProductFamily
-  { productFamilyId   :: JuxRawId
-  , productFamilyName :: Text
-  } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''ProductFamily
+-- data ProductFamily = ProductFamily
+--   { productFamilyId   :: JuxRawId
+--   , productFamilyName :: Text
+--   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+-- deriveNormalizerObjectJSON ''ProductFamily
 
-data ProductGeneration = ProductGeneration
-  { productGenerationId   :: JuxRawId
-  , productGenerationName :: Text
-  } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''ProductGeneration
+-- data ProductGeneration = ProductGeneration
+--   { productGenerationId   :: JuxRawId
+--   , productGenerationName :: Text
+--   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+-- deriveNormalizerObjectJSON ''ProductGeneration
 
-data ProductType = ProductType
-  { productTypeId   :: JuxRawId
-  , productTypeName :: Text
-  } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''ProductType
+-- data ProductType = ProductType
+--   { productTypeId   :: JuxRawId
+--   , productTypeName :: Text
+--   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+-- deriveNormalizerObjectJSON ''ProductType
 
-data ProductConfiguration = ProductConfiguration
-  { productConfigurationId   :: JuxRawId
-  , productConfigurationName :: Text
+-- data ProductConfiguration = ProductConfiguration
+--   { productConfigurationId   :: JuxRawId
+--   , productConfigurationName :: Text
+--   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+-- deriveNormalizerObjectJSON ''ProductConfiguration
+
+data TupleNode = TupleNode
+  { tupleNodeId   :: JuxRawId
+  , tupleNodeName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''ProductConfiguration
+deriveNormalizerObjectJSON ''TupleNode
 
 -- Entities: Crawl
 data CrawlType
