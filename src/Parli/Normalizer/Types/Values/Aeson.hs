@@ -33,8 +33,8 @@ normalizerEnumParseJSON :: Read a => (Text -> a) -> Name -> Value -> Parser a
 normalizerEnumParseJSON unknown name = withText (show name) $ \v ->
   either pure pure $ readJuxLabel unknown (fromString (namePrefix name) <> v)
 
-dropNamePrefix :: Show a => a -> String -> String
-dropNamePrefix name = drop $ 1 + length (namePrefix name)
+dropNamePrefix :: Name -> String -> String
+dropNamePrefix name = drop $ length (namePrefix name)
 
-namePrefix :: Show a => a -> String
-namePrefix name = showJuxLabel name <> "_"
+namePrefix :: Name -> String
+namePrefix name = juxLabelToWire (nameBase name) <> "_"
