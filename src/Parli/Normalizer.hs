@@ -52,7 +52,7 @@ fetchVocabulary version vocab
 fetchInputLayer :: (MonadNormalizer env m)
   => RatingsRequest -> m JuxStore
 fetchInputLayer body
-  = maybe mempty traceShowId
+  = maybe mempty id
     <$> post "/batch/input_layer" body
 
 queryText :: Text -> Maybe ByteString
