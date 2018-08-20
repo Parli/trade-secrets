@@ -1,5 +1,6 @@
 module Parli.Jux
 ( module Parli.Jux.Types
+, module Parli.Jux.TH
 , module Parli.Jux
 ) where
 
@@ -10,9 +11,11 @@ import qualified RIO.Text as T
 import Data.Aeson.TH
 import Data.Aeson.Types
 import Language.Haskell.TH
-import Parli.Jux.Types
 import Text.Casing
 import Text.Read
+
+import Parli.Jux.TH
+import Parli.Jux.Types
 
 -- convenient constructors
 juxStorable :: (Hashable a) => JuxId a -> b -> JuxIdMap a b Identity
@@ -56,10 +59,10 @@ juxLabelToWire, juxWireToLabel :: String -> String
 juxLabelToWire = toQuietSnake . fromHumps
 juxWireToLabel = toPascal . fromSnake
 
-showJuxLabel :: (JuxLabel a, IsString s) => a -> s
+showJuxLabel :: (Show a, IsString s) => a -> s
 showJuxLabel = fromString . juxLabelToWire . show
 
-readJuxLabel :: (JuxLabel a) => (Text -> e) -> Text -> Either e a
+readJuxLabel :: (Read a) => (Text -> e) -> Text -> Either e a
 readJuxLabel toError t = case reads s of
   [(a,[])] -> Right a
   _        -> Left (toError t)
@@ -77,5 +80,7 @@ juxFromJSONKey target
   = FromJSONKeyText $ either error id . readJuxLabel (juxReadError target)
 
 deriveJuxLabelJSON :: Name -> DecsQ
-deriveJuxLabelJSON
-  = deriveJSON defaultOptions{constructorTagModifier = juxLabelToWire}
+deriveJuxLabelJSON = deriveJSON defaultOptions
+  { constructorTagModifier = juxLabelToWire
+  , tagSingleConstructors = True
+  }

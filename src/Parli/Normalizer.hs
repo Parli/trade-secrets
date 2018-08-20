@@ -3,6 +3,7 @@ module Parli.Normalizer
 , fetchProductEntities
 , fetchQuestionAnalysis
 , fetchVocabularies
+, fetchInputLayer
 ) where
 
 import           RIO
@@ -13,6 +14,7 @@ import Data.Aeson
 import Network.HTTP.Types
 
 import Parli.Normalizer.Internal
+import Parli.Normalizer.Jux
 import Parli.Normalizer.Types
 
 data RatingsRequest = RatingsRequest
@@ -46,6 +48,12 @@ fetchVocabulary version vocab
     vocabRoute = "/enums/" <> utf8BuilderToText (display vocab)
     noVocab = mkVocab mempty
     mkVocab = (vocab,)
+
+fetchInputLayer :: (MonadNormalizer env m)
+  => RatingsRequest -> m JuxStore
+fetchInputLayer body
+  = maybe mempty traceShowId
+    <$> post "/batch/input_layer" body
 
 queryText :: Text -> Maybe ByteString
 queryText = Just . fromString . T.unpack

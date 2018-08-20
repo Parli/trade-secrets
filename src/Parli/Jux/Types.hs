@@ -21,9 +21,9 @@ class
   type JuxAttributeType a = x | x -> a
   type JuxEntityData    a = y | y -> a
   type JuxAttributeData a = z | z -> a
-  getJuxAttributeEntityType :: JuxAttributeType a -> a
   getJuxDataEntityType      :: JuxEntityData a -> a
   getJuxDataAttributeType   :: JuxAttributeData a -> JuxAttributeType a
+  getJuxAttributeEntityType :: JuxAttributeType a -> a
 
 class
   ( JuxLabel a

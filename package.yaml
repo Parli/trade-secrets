@@ -19,6 +19,7 @@ dependencies:
 - casing
 - cassava
 - clock
+- currency-codes
 - data-default
 - datadog
 - http-types
