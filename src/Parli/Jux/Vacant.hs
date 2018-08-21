@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Parli.Jux.Vacant where
 
+import RIO
+
 import Data.Aeson
 import Parli.Jux
-import RIO
 
 data JuxVacantType = JuxVacantType
   deriving (Eq, Show, Read, Generic, Hashable)
@@ -24,3 +25,6 @@ instance JuxQueryType JuxVacantType where
   type JuxQueryResponse JuxVacantType = JuxVacantType
   getJuxRequestQuery = const JuxVacantType
   getJuxResponseQuery = const JuxVacantType
+
+instance JuxLabelValue JuxVacantType JuxVacantType where
+  juxLabelValueParseJSON _ _ = pure JuxVacantType

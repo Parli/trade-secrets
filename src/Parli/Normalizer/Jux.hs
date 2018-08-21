@@ -54,3 +54,26 @@ instance JuxEntityType Type.Entity where
     Type.ProductConfigurationAliasIds  -> Type.ProductConfiguration
     Type.ProductConfigurationPriceObj  -> Type.ProductConfiguration
     Type.ProductConfigurationRatingIds -> Type.ProductConfiguration
+
+instance JuxLabelValue Type.Entity Data.Entity where
+  juxLabelValueParseJSON Type.Alias                = wrapParseJSON Data.Alias
+  juxLabelValueParseJSON Type.ProductFamily        = wrapParseJSON Data.ProductFamily
+  juxLabelValueParseJSON Type.ProductGeneration    = wrapParseJSON Data.ProductGeneration
+  juxLabelValueParseJSON Type.ProductType          = wrapParseJSON Data.ProductType
+  juxLabelValueParseJSON Type.ProductConfiguration = wrapParseJSON Data.ProductConfiguration
+  juxLabelValueParseJSON Type.Crawl                = wrapParseJSON Data.Crawl
+  juxLabelValueParseJSON Type.Rating               = wrapParseJSON Data.Rating
+
+instance JuxLabelValue Type.Attribute Data.Attribute where
+  juxLabelValueParseJSON Type.ProductFamilyAliasIds         = wrapParseJSON Data.ProductFamilyAliasIds
+  juxLabelValueParseJSON Type.ProductFamilyPriceObj         = wrapParseJSON Data.ProductFamilyPriceObj
+  juxLabelValueParseJSON Type.ProductFamilyRatingIds        = wrapParseJSON Data.ProductFamilyRatingIds
+  juxLabelValueParseJSON Type.ProductGenerationAliasIds     = wrapParseJSON Data.ProductGenerationAliasIds
+  juxLabelValueParseJSON Type.ProductGenerationPriceObj     = wrapParseJSON Data.ProductGenerationPriceObj
+  juxLabelValueParseJSON Type.ProductGenerationRatingIds    = wrapParseJSON Data.ProductGenerationRatingIds
+  juxLabelValueParseJSON Type.ProductTypeAliasIds           = wrapParseJSON Data.ProductTypeAliasIds
+  juxLabelValueParseJSON Type.ProductTypePriceObj           = wrapParseJSON Data.ProductTypePriceObj
+  juxLabelValueParseJSON Type.ProductTypeRatingIds          = wrapParseJSON Data.ProductTypeRatingIds
+  juxLabelValueParseJSON Type.ProductConfigurationAliasIds  = wrapParseJSON Data.ProductConfigurationAliasIds
+  juxLabelValueParseJSON Type.ProductConfigurationPriceObj  = wrapParseJSON Data.ProductConfigurationPriceObj
+  juxLabelValueParseJSON Type.ProductConfigurationRatingIds = wrapParseJSON Data.ProductConfigurationRatingIds

@@ -7,11 +7,11 @@ import           Parli.Jux
 import qualified Parli.Normalizer.Types.Values as Value
 
 data Entity
-  = Alias                Value.TupleNode
-  | ProductFamily        Value.TupleNode
-  | ProductGeneration    Value.TupleNode
-  | ProductType          Value.TupleNode
-  | ProductConfiguration Value.TupleNode
+  = Alias                Value.Alias
+  | ProductFamily        Value.ProductFamily
+  | ProductGeneration    Value.ProductGeneration
+  | ProductType          Value.ProductType
+  | ProductConfiguration Value.ProductConfiguration
   | Crawl                Value.Crawl
   | Rating               Value.Rating
   deriving (Eq, Ord, Show, Read, Generic)
