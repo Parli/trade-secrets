@@ -150,23 +150,25 @@ deriving instance JuxStoreType e q => ToJSON (JuxWire e q)
 deriving instance JuxWireType e q => FromJSON (JuxWire e q)
 
 juxWireToStore :: JuxStoreType e q => JuxWire e q -> JuxStore' e q
-juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
+juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t'
   where
     a' = maybe mempty (toIdMap . fold . HM.elems) a
     e' = maybe mempty toIdMap e
     q' = maybe mempty toIdMap q
     r' = maybe mempty toIdMap r
+    t' = maybe mempty id t
     toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
     toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList . getJuxWireMap
     toIdPair k = fmap (JuxId k *** Identity) . HM.toList
 
 juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire e q
-juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
+juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
   where
     a' = Just . HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
     e' = Just . toWireMap $ e
     q' = Just . toWireMap $ q
     r' = Just . toWireMap $ r
+    t' = Just t
     toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
     toWireMap = JuxWireMap . HM.fromList . toWirePairs
     toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
