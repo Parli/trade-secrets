@@ -18,7 +18,8 @@ deriveNormalizerObjectJSON name = deriveJSON defaultOptions
     = let
       parts = id &&& dropNamePrefix name
       go y x
-        | x `elem` ["id", "type"] = y
+        | x == "id" = y
+        -- | x `elem` ["id", "type"] = y
         | otherwise = x
     in uncurry go . parts . juxLabelToWire
   } name
