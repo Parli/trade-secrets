@@ -105,11 +105,15 @@ instance (JuxLabel l) => Monoid (JuxWireMap l v) where
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
   parseJSON = withObject "JuxWireMap" $ \o -> do
     let
-      readJuxLabel' e = either error id . readJuxLabel (juxReadError e)
+      readJuxLabelMaybe :: (Read a) => Text -> Maybe a
+      readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
       raw :: [(Text, Value)]
       raw = HM.toList o
+      extractMaybe :: (Maybe a, b) -> Maybe (a, b)
+      extractMaybe (Just l, v) = Just (l, v)
+      extractMaybe _           = Nothing
       juxKeys :: [(l, Value)]
-      juxKeys = first (readJuxLabel' "JuxLabelValue") <$> raw
+      juxKeys = catMaybes $ extractMaybe . first readJuxLabelMaybe <$> raw
       juxPairs :: Aeson.Parser [(l, HashMap JuxRawId v)]
       juxPairs = sequence $ sequence . go <$> juxKeys
       go :: (l, Value) -> (l, Aeson.Parser (HashMap JuxRawId v))
@@ -120,7 +124,7 @@ instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
           innerRaw :: [(Text, Value)]
           innerRaw = HM.toList m
           innerKeys :: [(JuxRawId, Value)]
-          innerKeys = first (readJuxLabel' "JuxRawIdMap") <$> innerRaw
+          innerKeys = catMaybes $ extractMaybe . first readJuxLabelMaybe <$> innerRaw
           innerPairs :: Aeson.Parser [(JuxRawId, v)]
           innerPairs = sequence $ sequence . innerGo <$> innerKeys
           innerGo :: (JuxRawId, Value) -> (JuxRawId, Aeson.Parser v)
