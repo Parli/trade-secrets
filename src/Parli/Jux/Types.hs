@@ -139,11 +139,11 @@ wrapParseJSON :: FromJSON a => (a -> v) -> Value -> Aeson.Parser v
 wrapParseJSON w = fmap w . parseJSON
 
 data JuxWire e q = JuxWire
-  { attributes :: HashMap e (JuxWireMap (JuxAttributeType e) (JuxAttributeData e))
-  , entities   :: JuxWireMap e (JuxEntityData e)
-  , queries    :: JuxWireMap q (JuxQueryRequest q)
-  , responses  :: JuxWireMap q (JuxQueryResponse q)
-  , types      :: JuxTypes' e
+  { attributes :: Maybe (HashMap e (JuxWireMap (JuxAttributeType e) (JuxAttributeData e)))
+  , entities   :: Maybe (JuxWireMap e (JuxEntityData e))
+  , queries    :: Maybe (JuxWireMap q (JuxQueryRequest q))
+  , responses  :: Maybe (JuxWireMap q (JuxQueryResponse q))
+  , types      :: Maybe (JuxTypes' e)
   } deriving (Generic, Typeable)
 -- deriving instance JuxStoreType e q => Show (JuxWire e q)
 deriving instance JuxStoreType e q => ToJSON (JuxWire e q)
@@ -152,10 +152,10 @@ deriving instance JuxWireType e q => FromJSON (JuxWire e q)
 juxWireToStore :: JuxStoreType e q => JuxWire e q -> JuxStore' e q
 juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
   where
-    a' = toIdMap . fold . HM.elems $ a
-    e' = toIdMap e
-    q' = toIdMap q
-    r' = toIdMap r
+    a' = maybe mempty (toIdMap . fold . HM.elems) a
+    e' = maybe mempty toIdMap e
+    q' = maybe mempty toIdMap q
+    r' = maybe mempty toIdMap r
     toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
     toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList . getJuxWireMap
     toIdPair k = fmap (JuxId k *** Identity) . HM.toList
@@ -163,10 +163,10 @@ juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t
 juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire e q
 juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t
   where
-    a' = HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
-    e' = toWireMap e
-    q' = toWireMap q
-    r' = toWireMap r
+    a' = Just . HM.fromListWith (<>) . fmap toWireAttributePair . toWirePairs $ a
+    e' = Just . toWireMap $ e
+    q' = Just . toWireMap $ q
+    r' = Just . toWireMap $ r
     toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
     toWireMap = JuxWireMap . HM.fromList . toWirePairs
     toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
