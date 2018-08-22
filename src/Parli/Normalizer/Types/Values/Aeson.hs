@@ -14,7 +14,7 @@ import Parli.Jux
 
 deriveNormalizerObjectJSON :: Name -> DecsQ
 deriveNormalizerObjectJSON name = deriveJSON defaultOptions
-  { constructorTagModifier
+  { fieldLabelModifier
     = let
       parts = id &&& dropNamePrefix name
       go y x
