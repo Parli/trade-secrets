@@ -2,7 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Parli.Normalizer.Types.Values where
 
-import RIO
+import           RIO
+import qualified RIO.Partial as Unsafe
 
 import Data.Aeson
 import Data.Currency
@@ -16,7 +17,12 @@ data Money = Money
   { moneyAmount   :: Int
   , moneyCurrency :: Alpha
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
-deriveNormalizerObjectJSON ''Money
+instance ToJSON Money where
+  toJSON x = object
+    [ "amount" .= show (moneyAmount x), "currency" .= moneyCurrency x ]
+instance FromJSON Money where
+  parseJSON = withObject "Money" $ \v ->
+    Money <$> (Unsafe.read <$> v .: "amount") <*> v .: "currency"
 
 data PriceIntent = PriceIntent
   { priceIntentIntent :: Text
