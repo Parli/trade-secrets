@@ -104,7 +104,7 @@ instance (JuxLabel l) => Monoid (JuxWireMap l v) where
   mempty = JuxWireMap mempty
   mappend = (<>)
 instance (JuxLabelValue l v) => ToJSON (JuxWireMap l v) where
-  toJSON (JuxWireMap x) = toJSON x
+  toJSON = toJSON . getJuxWireMap
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
   parseJSON = withObject "JuxWireMap"
     $ fmap (JuxWireMap . HM.fromList)
@@ -153,7 +153,7 @@ juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
     r' = Just . toWireMap $ r
     t' = Just t
     toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
-    toWireMap = JuxWireMap . HM.fromList . toWirePairs
+    toWireMap = JuxWireMap . HM.fromListWith (<>) . toWirePairs
     toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
     toWirePair = (juxType &&& juxRawId) *** runIdentity
     embedMap (l, k) = (l,) . HM.singleton k
