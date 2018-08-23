@@ -97,12 +97,14 @@ instance JuxStoreType e q => Monoid (JuxStore' e q) where
 -- Intermediate structure for serialization
 newtype JuxWireMap l v
   = JuxWireMap { getJuxWireMap :: (HashMap l (HashMap JuxRawId v)) }
-  deriving (Eq, Show, Read, Generic, ToJSON)
+  deriving (Eq, Show, Read, Generic)
 instance (JuxLabel l) => Semigroup (JuxWireMap l v) where
   (JuxWireMap x) <> (JuxWireMap y) = JuxWireMap $ x <> y
 instance (JuxLabel l) => Monoid (JuxWireMap l v) where
   mempty = JuxWireMap mempty
   mappend = (<>)
+instance (JuxLabelValue l v) => ToJSON (JuxWireMap l v) where
+  toJSON (JuxWireMap x) = toJSON x
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
   parseJSON = fmap JuxWireMap . parseJuxMap "JuxWireMap" outer
     where
