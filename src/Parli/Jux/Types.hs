@@ -106,17 +106,13 @@ instance (JuxLabel l) => Monoid (JuxWireMap l v) where
 instance (JuxLabelValue l v) => ToJSON (JuxWireMap l v) where
   toJSON (JuxWireMap x) = toJSON x
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
-  parseJSON = fmap JuxWireMap . parseJuxMap "JuxWireMap" outer
+  parseJSON = withObject "JuxWireMap"
+    $ fmap (JuxWireMap . HM.fromList)
+    . traverse (sequence . uncurry go) . catMaybes
+    . fmap (sequenceFst . first readJuxLabelMaybe) . HM.toList
     where
-      parseJuxMap t go = fmap HM.fromList . withObject t (makePairs go)
-      outer (l, m) = (l, parseJuxMap "JuxRawIdMap" (inner l) m)
-      inner l (k, value) = (k, juxLabelValueParseJSON l value)
-      makePairs go
-        = traverse (sequence . go) . catMaybes
-        . fmap (sequenceFst . first readJuxLabelMaybe) . HM.toList
-      readJuxLabelMaybe :: (Read a) => Text -> Maybe a
+      go l = (l,) . withObject "JuxRawIdMap" (traverse $ juxLabelValueParseJSON l)
       readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
-      sequenceFst :: Monad m => (m a, b) -> m (a, b)
       sequenceFst = fmap swap . sequence . swap
 
 class (JuxLabel l, JuxValue v) => JuxLabelValue l v where
