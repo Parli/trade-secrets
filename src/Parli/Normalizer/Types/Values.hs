@@ -87,14 +87,14 @@ instance FromJSON CrawlType where
   parseJSON = normalizerEnumParseJSON CrawlTypeUnknown ''CrawlType
 
 data Crawl = Crawl
-  { crawlId        :: JuxRawId
-  , crawlSourceId  :: JuxRawId
-  , crawlPageId    :: JuxRawId
-  , crawlType      :: CrawlType
-  , crawlUrl       :: Text
-  , crawlAccessed  :: Epoch
-  , crawlUpdated   :: Maybe Epoch
-  , crawlPublished :: Maybe Epoch
+  { crawlId          :: JuxRawId
+  , crawlSourceId    :: JuxRawId
+  , crawlPageId      :: JuxRawId
+  , crawlType        :: CrawlType
+  , crawlUrl         :: Text
+  , crawlAccessedAt  :: Epoch
+  , crawlUpdatedAt   :: Maybe Epoch
+  , crawlPublishedAt :: Maybe Epoch
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''Crawl
 
