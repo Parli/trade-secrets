@@ -80,7 +80,7 @@ data JuxStore' e q = JuxStore
   } deriving (Generic, Typeable)
 deriving instance JuxStoreType e q => Eq (JuxStore' e q)
 deriving instance JuxStoreType e q => Show (JuxStore' e q)
-instance JuxStoreType e q => ToJSON (JuxStore' e q) where
+instance JuxWireType e q => ToJSON (JuxStore' e q) where
   toJSON = toJSON . juxStoreToWire
 instance JuxWireType e q => FromJSON (JuxStore' e q) where
   parseJSON = fmap juxWireToStore . parseJSON
@@ -133,7 +133,7 @@ data JuxWire e q = JuxWire
   , types      :: Maybe (JuxTypes' e)
   } deriving (Generic, Typeable)
 -- deriving instance JuxStoreType e q => Show (JuxWire e q)
-deriving instance JuxStoreType e q => ToJSON (JuxWire e q)
+deriving instance JuxWireType e q => ToJSON (JuxWire e q)
 deriving instance JuxWireType e q => FromJSON (JuxWire e q)
 
 juxWireToStore :: JuxStoreType e q => JuxWire e q -> JuxStore' e q
