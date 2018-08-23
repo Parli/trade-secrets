@@ -152,3 +152,13 @@ data Rating = Rating
   , ratingPriceIntent :: PriceIntent
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''Rating
+
+-- Question analysis route response
+data Analysis = Analysis
+  { analysisContext :: Context
+  , analysisIntent  :: PriceIntent
+  } deriving (Show)
+deriveNormalizerObjectJSON ''Analysis
+
+emptyAnalysis :: Analysis
+emptyAnalysis = Analysis mempty $ PriceIntent "none" (Money 0 XXX)

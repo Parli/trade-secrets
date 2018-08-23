@@ -3,5 +3,5 @@ module Parli.Normalizer.Types
 ) where
 
 import Parli.Normalizer.Types.Environment as X
-import Parli.Normalizer.Types.Response as X
+import Parli.Normalizer.Types.Values as X
 import Parli.Normalizer.Types.Vocabulary as X

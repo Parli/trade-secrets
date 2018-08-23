@@ -1,9 +1,8 @@
 module Parli.Normalizer
 ( RatingsRequest(..)
-, fetchProductEntities
+, fetchRatingsEntities
 , fetchQuestionAnalysis
 , fetchVocabularies
-, fetchInputLayer
 ) where
 
 import           RIO
@@ -22,38 +21,23 @@ data RatingsRequest = RatingsRequest
   , node_ids :: [Text]
   } deriving (Eq, Show, Generic, ToJSON)
 
-fetchProductEntities :: (MonadNormalizer env m) => RatingsRequest -> m Entities
-fetchProductEntities body
-  = maybe emptyEntities responseEntities
-    <$> post "/entities/ratings" body
--- TODO: switch to 1.9-format /batch/input_layer
+fetchRatingsEntities :: (MonadNormalizer env m) => RatingsRequest -> m JuxStore
+fetchRatingsEntities body
+  = maybe mempty id <$> post "/batch/input_layer" body
 
 fetchQuestionAnalysis :: (MonadNormalizer env m) => Text -> m Analysis
 fetchQuestionAnalysis question
-  = maybe emptyAnalysis responseAnalysis
-      <$> get "/getAnalysis" query
+  = maybe emptyAnalysis id <$> get "/getAnalysis" query
   where
-    query = catMaybes [ toQueryWith queryText "query"  <$> Just question ]
+    query = catMaybes [toQueryWith queryText "query" <$> Just question]
 
 fetchVocabularies :: (MonadNormalizer env m) => Int -> m VocabularyList
-fetchVocabularies version = M.fromList
-  <$> mapConcurrently (fetchVocabulary version) [minBound..maxBound]
-
-fetchVocabulary :: (MonadNormalizer env m) => Int -> Vocabulary -> m (Vocabulary, [Text])
-fetchVocabulary version vocab
-  = maybe noVocab mkVocab
-    <$> get vocabRoute query
+fetchVocabularies version
+  = M.fromList <$> mapConcurrently go [minBound..maxBound]
   where
-    query = [ toQueryWith queryShow "version_time" version ]
-    vocabRoute = "/enums/" <> utf8BuilderToText (display vocab)
-    noVocab = mkVocab mempty
-    mkVocab = (vocab,)
-
-fetchInputLayer :: (MonadNormalizer env m)
-  => RatingsRequest -> m JuxStore
-fetchInputLayer body
-  = maybe mempty id
-    <$> post "/batch/input_layer" body
+    go v = (v,) . maybe mempty id <$> get (route v) query
+    route = mappend "/enums/" . utf8BuilderToText . display
+    query = pure $ toQueryWith queryShow "version_time" version
 
 queryText :: Text -> Maybe ByteString
 queryText = Just . fromString . T.unpack
