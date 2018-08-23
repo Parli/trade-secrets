@@ -17,6 +17,7 @@ import qualified RIO.HashMap as HM
 
 import           Data.Aeson
 import qualified Data.Aeson.Types as Aeson
+import           Data.Tuple
 
 import qualified RIO.Text as T
 import           Text.Casing
@@ -103,34 +104,18 @@ instance (JuxLabel l) => Monoid (JuxWireMap l v) where
   mempty = JuxWireMap mempty
   mappend = (<>)
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
-  parseJSON = withObject "JuxWireMap" $ \o -> do
-    let
+  parseJSON = fmap JuxWireMap . parseJuxMap "JuxWireMap" outer
+    where
+      parseJuxMap t go = fmap HM.fromList . withObject t (makePairs go)
+      outer (l, m) = (l, parseJuxMap "JuxRawIdMap" (inner l) m)
+      inner l (k, value) = (k, juxLabelValueParseJSON l value)
+      makePairs go
+        = traverse (sequence . go) . catMaybes
+        . fmap (sequenceFst . first readJuxLabelMaybe) . HM.toList
       readJuxLabelMaybe :: (Read a) => Text -> Maybe a
       readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
-      raw :: [(Text, Value)]
-      raw = HM.toList o
-      extractMaybe :: (Maybe a, b) -> Maybe (a, b)
-      extractMaybe (Just l, v) = Just (l, v)
-      extractMaybe _           = Nothing
-      juxKeys :: [(l, Value)]
-      juxKeys = catMaybes $ extractMaybe . first readJuxLabelMaybe <$> raw
-      juxPairs :: Aeson.Parser [(l, HashMap JuxRawId v)]
-      juxPairs = sequence $ sequence . go <$> juxKeys
-      go :: (l, Value) -> (l, Aeson.Parser (HashMap JuxRawId v))
-      go (l, m) = (l, innerParse l m)
-      innerParse :: l -> Value -> Aeson.Parser (HashMap JuxRawId v)
-      innerParse l = withObject "JuxRawIdMap" $ \m -> do
-        let
-          innerRaw :: [(Text, Value)]
-          innerRaw = HM.toList m
-          innerKeys :: [(JuxRawId, Value)]
-          innerKeys = catMaybes $ extractMaybe . first readJuxLabelMaybe <$> innerRaw
-          innerPairs :: Aeson.Parser [(JuxRawId, v)]
-          innerPairs = sequence $ sequence . innerGo <$> innerKeys
-          innerGo :: (JuxRawId, Value) -> (JuxRawId, Aeson.Parser v)
-          innerGo (k, value) = (k, juxLabelValueParseJSON l value)
-        HM.fromList <$> innerPairs
-    JuxWireMap . HM.fromList <$> juxPairs
+      sequenceFst :: Monad m => (m a, b) -> m (a, b)
+      sequenceFst = fmap swap . sequence . swap
 
 class (JuxLabel l, JuxValue v) => JuxLabelValue l v where
   juxLabelValueParseJSON :: l -> Value -> Aeson.Parser v
