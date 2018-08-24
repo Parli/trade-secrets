@@ -34,7 +34,7 @@ data Truth = Truth
   , trueQuestion     :: N.Analysis
   , truePrice        :: N.Money
   , trueRatings      :: [N.Rating]
-  , trueCrawls       :: Map Text (Epoch, N.Crawl)
+  , trueCrawls       :: Map Text N.Crawl
   } deriving (Show)
 
 fakeNews :: Truth
@@ -66,20 +66,19 @@ distill proto = fromMaybe (lexicon vocab) $ do
     (ProtoTruth epoch vocab question protoPrice product jux) = proto
     ratings = M.elems . M.filter cromulent $ allRatings
     cromulent rating = M.member (N.ratingCrawlId rating) crawls
-    crawls = M.fromList $ (N.crawlId . snd &&& id) <$> M.elems collapsed
+    crawls = M.fromList $ (N.crawlId &&& id) <$> M.elems collapsed
     collapsed = M.fromListWith collapse indexedCrawls
-    indexedCrawls = (N.crawlPageId &&& (crawlEarliest &&& id)) <$> relevantCrawls
+    indexedCrawls = (N.crawlPageId &&& id) <$> relevantCrawls
     relevantCrawls = filter nonFuture $ M.elems allCrawls
     nonFuture crawl = epoch >= N.crawlAccessedAt crawl
-    allCrawls = M.fromList $ (\(Data.Crawl x) -> (crawlId &&& id) x)
+    allCrawls = M.fromList $ (\(Data.Crawl x) -> (N.crawlId &&& id) x)
       <$> juxStoreDataOfType Type.Crawl (juxEntities jux)
-    allRatings = M.fromList $ (\(Data.Rating x) -> (ratingId &&& id) x)
+    allRatings = M.fromList $ (\(Data.Rating x) -> (N.ratingId &&& id) x)
       <$> juxStoreDataOfType Type.Rating (juxEntities jux)
 
-collapse :: (N.Epoch, N.Crawl) -> (N.Epoch, N.Crawl) -> (N.Epoch, N.Crawl)
-collapse (x,a) (y,b) = (min x y, bool a b $ N.crawlAccessedAt a < N.crawlAccessedAt b)
-
-crawlEarliest :: N.Crawl -> N.Epoch
-crawlEarliest N.Crawl
-  { N.crawlAccessedAt = a, N.crawlUpdatedAt = u, N.crawlPublishedAt = p }
-  = fromMaybe a . getAlt . fold . fmap Alt $ [p, u]
+collapse :: N.Crawl -> N.Crawl -> N.Crawl
+collapse
+  x@N.Crawl{ N.crawlAccessedAt = ax, N.crawlUpdatedAt = ux }
+  y@N.Crawl{ N.crawlAccessedAt = ay, N.crawlUpdatedAt = uy }
+  = (bool x y $ ax < ay)
+    { N.crawlAccessedAt = min ax ay, N.crawlUpdatedAt = max ux uy }

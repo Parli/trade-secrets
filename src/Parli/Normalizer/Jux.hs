@@ -1,8 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Parli.Normalizer.Jux
-( module Parli.Normalizer.Jux
-, module Parli.Normalizer.Types.Values
-) where
+module Parli.Normalizer.Jux where
 
 import           Parli.Jux.Types
 import qualified Parli.Normalizer.Jux.Data as Data
