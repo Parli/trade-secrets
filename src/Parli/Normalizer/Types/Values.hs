@@ -156,8 +156,8 @@ deriveNormalizerObjectJSON ''Rating
 
 -- Question analysis route response
 data Analysis = Analysis
-  { analysisContext :: Context
-  , analysisIntent  :: PriceIntent
+  { analysisContext     :: Context
+  , analysisPriceIntent :: PriceIntent
   } deriving (Show)
 deriveNormalizerObjectJSON ''Analysis
 
