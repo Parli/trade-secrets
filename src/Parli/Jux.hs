@@ -50,6 +50,79 @@ toAttributeKey a k = k { juxType = a }
 toEntityKey :: (JuxEntityType e, a ~ JuxAttributeType e) => JuxKey a -> JuxKey e
 toEntityKey k@JuxKey{ juxType = a } = k{ juxType = getJuxAttributeEntityType a }
 
+-- filtration/extraction
+juxKeyHasType :: Eq a => JuxKey a -> a -> Bool
+juxKeyHasType k t = juxType k == t
+
+juxMapFilterByType :: Eq a => a -> JuxMap a b f -> JuxMap a b f
+juxMapFilterByType t = HM.mapMaybeWithKey $ \(JuxKey t' _) v -> bool Nothing (Just v) (t'==t)
+
+juxStoreDataOfType :: Eq a => a -> JuxMap a b Identity -> [b]
+juxStoreDataOfType t = fmap runIdentity . HM.elems . juxMapFilterByType t
+
+-- element operations
+juxLookupType :: JuxStoreType e q => JuxId -> JuxStore' e q -> Maybe e
+juxLookupType k = HM.lookup k . juxTypes
+
+juxLookupKey :: JuxStoreType e q => JuxId -> JuxStore' e q -> Maybe (JuxKey e)
+juxLookupKey k = fmap (flip JuxKey k) . juxLookupType k
+
+juxLookupEntity :: JuxStoreType e q
+  => JuxKey e -> JuxStore' e q -> Maybe (JuxEntityData e)
+juxLookupEntity k = fmap runIdentity . HM.lookup k . juxEntities
+
+juxLookupAttribute :: JuxStoreType e q
+  => JuxKey (JuxAttributeType e) -> JuxStore' e q -> Maybe (JuxAttributeData e)
+juxLookupAttribute k = fmap runIdentity . HM.lookup k . juxAttributes
+
+juxLookupQuery :: JuxStoreType e q
+  => JuxKey q -> JuxStore' e q -> Maybe (JuxQueryRequest q)
+juxLookupQuery k = fmap runIdentity . HM.lookup k . juxQueries
+
+juxLookupResponse :: JuxStoreType e q
+  => JuxKey q -> JuxStore' e q -> Maybe (JuxQueryResponse q)
+juxLookupResponse k = fmap runIdentity . HM.lookup k . juxResponses
+
+-- juxInsertType :: JuxStoreType e q
+--   => JuxKey e -> JuxStore' e q -> JuxStore' e q
+-- juxInsertType (JuxKey v k) jux@JuxStore{juxTypes}
+--   = jux{ juxTypes = HM.insert k v juxTypes }
+
+-- juxInsertEntity :: JuxStoreType e q
+--   => JuxKey e -> JuxEntityData e -> JuxStore' e q -> JuxStore' e q
+-- juxInsertEntity k v jux@JuxStore{juxEntities}
+--   = jux{ juxEntities = HM.insert k (Identity v) juxEntities }
+
+-- juxInsertAttribute :: JuxStoreType e q
+--   => JuxKey (JuxAttributeType e) -> JuxAttributeData e -> JuxStore' e q -> JuxStore' e q
+-- juxInsertAttribute k v jux@JuxStore{juxAttributes}
+--   = jux{ juxAttributes = HM.insert k (Identity v) juxAttributes }
+
+-- juxInsertQuery :: JuxStoreType e q
+--   => JuxKey q -> JuxQueryRequest q -> JuxStore' e q -> JuxStore' e q
+-- juxInsertQuery k v jux@JuxStore{juxQueries}
+--   = jux{ juxQueries = HM.insert k (Identity v) juxQueries }
+
+-- juxInsertResponse :: JuxStoreType e q
+--   => JuxKey q -> JuxQueryResponse q -> JuxStore' e q -> JuxStore' e q
+-- juxInsertResponse k v jux@JuxStore{juxResponses}
+--   = jux{ juxResponses = HM.insert k (Identity v) juxResponses }
+
+-- juxDeleteType :: JuxStoreType e q => JuxId -> JuxStore' e q -> JuxStore' e q
+-- juxDeleteType k jux@JuxStore{juxTypes} = jux{ juxTypes = HM.delete k juxTypes}
+
+-- juxDeleteEntity :: JuxStoreType e q => JuxKey e -> JuxStore' e q -> JuxStore' e q
+-- juxDeleteEntity k jux@JuxStore{juxEntities} = jux{ juxEntities = HM.delete k juxEntities}
+
+-- juxDeleteAttribute :: JuxStoreType e q => JuxKey (JuxAttributeType e) -> JuxStore' e q -> JuxStore' e q
+-- juxDeleteAttribute k jux@JuxStore{juxAttributes} = jux{ juxAttributes = HM.delete k juxAttributes}
+
+-- juxDeleteQuery :: JuxStoreType e q => JuxKey q -> JuxStore' e q -> JuxStore' e q
+-- juxDeleteQuery k jux@JuxStore{juxQueries} = jux{ juxQueries = HM.delete k juxQueries}
+
+-- juxDeleteResponse :: JuxStoreType e q => JuxKey q -> JuxStore' e q -> JuxStore' e q
+-- juxDeleteResponse k jux@JuxStore{juxResponses} = jux{ juxResponses = HM.delete k juxResponses}
+
 -- (de)serialization
 juxToJSONKey :: (JuxLabel a) => ToJSONKeyFunction a
 juxToJSONKey = toJSONKeyText showJuxLabel

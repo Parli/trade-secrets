@@ -7,56 +7,79 @@ module Parli.Truth
 import           RIO hiding (product)
 import qualified RIO.Map as M
 
+import Data.Monoid
+
+import qualified Parli.Normalizer.Jux.Types as Type
+import qualified Parli.Normalizer.Jux.Data as Data
 import qualified Parli.Normalizer.Types as N
+import Parli.Normalizer.Jux
+import Parli.Jux
 
 data ProtoTruth = ProtoTruth
   { protoEpoch        :: Int
   , protoVocabularies :: N.VocabularyList
   , protoQuestion     :: N.Analysis
-  , protoEntities     :: N.Entities
-  , protoPrice        :: N.Currency
+  , protoPrice        :: Maybe N.Money
+  , protoProductId    :: JuxId
+  , protoEntities     :: JuxStore
   } deriving (Show)
 
 dogma :: N.VocabularyList -> ProtoTruth
 dogma vocabularies =
-  ProtoTruth 0 vocabularies N.emptyAnalysis N.emptyEntities N.emptyCurrency
+  ProtoTruth 0 vocabularies N.emptyAnalysis Nothing "" mempty
 
 data Truth = Truth
   { trueEpoch        :: Int
   , trueVocabularies :: N.VocabularyList
   , trueQuestion     :: N.Analysis
-  , trueProduct      :: N.Product
+  , truePrice        :: N.Money
   , trueRatings      :: [N.Rating]
-  , trueCrawls       :: Map Text N.Crawl
+  , trueCrawls       :: Map Text (Epoch, N.Crawl)
   } deriving (Show)
 
 fakeNews :: Truth
-fakeNews = Truth 0 mempty N.emptyAnalysis N.emptyProduct mempty mempty
+fakeNews = Truth 0 mempty N.emptyAnalysis N.emptyMoney mempty mempty
 
 lexicon :: N.VocabularyList -> Truth
 lexicon vocabularies = fakeNews{ trueVocabularies = vocabularies }
 
 distill :: ProtoTruth -> Truth
 distill proto = fromMaybe (lexicon vocab) $ do
-  p <- listToMaybe . M.elems $ allProducts
-  let product = p{N.productPrice = price}
-  pure $ Truth epoch vocab question product ratings crawls
+  productKey <- juxLookupKey product jux
+  productPriceKey <- flip toAttributeKey productKey
+    <$> case juxType productKey of
+      Type.ProductFamily        -> Just Type.ProductFamilyPriceObj
+      Type.ProductGeneration    -> Just Type.ProductGenerationPriceObj
+      Type.ProductType          -> Just Type.ProductTypePriceObj
+      Type.ProductConfiguration -> Just Type.ProductConfigurationPriceObj
+      _                         -> Nothing
+  let
+    unwrapPrice (Data.ProductFamilyPriceObj        x) = Just x
+    unwrapPrice (Data.ProductGenerationPriceObj    x) = Just x
+    unwrapPrice (Data.ProductTypePriceObj          x) = Just x
+    unwrapPrice (Data.ProductConfigurationPriceObj x) = Just x
+    unwrapPrice _                                     = Nothing
+    dataPrice = unwrapPrice =<< juxLookupAttribute productPriceKey jux
+  price <- getAlt . fold $ Alt <$> [protoPrice, dataPrice, Just N.emptyMoney]
+  pure $ Truth epoch vocab question price ratings crawls
   where
+    (ProtoTruth epoch vocab question protoPrice product jux) = proto
     ratings = M.elems . M.filter cromulent $ allRatings
     cromulent rating = M.member (N.ratingCrawlId rating) crawls
-    crawls = M.fromList $ (N.crawlId &&& id) <$> M.elems collapsed
+    crawls = M.fromList $ (N.crawlId . snd &&& id) <$> M.elems collapsed
     collapsed = M.fromListWith collapse indexedCrawls
-    indexedCrawls = (N.crawlPageId &&& id) <$> relevantCrawls
+    indexedCrawls = (N.crawlPageId &&& (crawlEarliest &&& id)) <$> relevantCrawls
     relevantCrawls = filter nonFuture $ M.elems allCrawls
-    nonFuture crawl = epoch >= N.crawlAccessed crawl
-    (ProtoTruth epoch vocab question entities price) = proto
-    (N.Entities allProducts allRatings allCrawls) = entities
+    nonFuture crawl = epoch >= N.crawlAccessedAt crawl
+    allCrawls = M.fromList $ (\(Data.Crawl x) -> (crawlId &&& id) x)
+      <$> juxStoreDataOfType Type.Crawl (juxEntities jux)
+    allRatings = M.fromList $ (\(Data.Rating x) -> (ratingId &&& id) x)
+      <$> juxStoreDataOfType Type.Rating (juxEntities jux)
 
-collapse :: N.Crawl -> N.Crawl -> N.Crawl
-collapse
-  x@ N.Crawl { N.crawlAccessed = xA, N.crawlEarliest = xE }
-  y@ N.Crawl { N.crawlAccessed = yA, N.crawlEarliest = yE }
-  = latest { N.crawlEarliest = crawlEarliest }
-  where
-    latest = if xA > yA then x else y
-    crawlEarliest = min xE yE
+collapse :: (N.Epoch, N.Crawl) -> (N.Epoch, N.Crawl) -> (N.Epoch, N.Crawl)
+collapse (x,a) (y,b) = (min x y, bool a b $ N.crawlAccessedAt a < N.crawlAccessedAt b)
+
+crawlEarliest :: N.Crawl -> N.Epoch
+crawlEarliest N.Crawl
+  { N.crawlAccessedAt = a, N.crawlUpdatedAt = u, N.crawlPublishedAt = p }
+  = fromMaybe a . getAlt . fold . fmap Alt $ [p, u]

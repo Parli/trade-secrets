@@ -161,5 +161,12 @@ data Analysis = Analysis
   } deriving (Show)
 deriveNormalizerObjectJSON ''Analysis
 
+-- Convenience
 emptyAnalysis :: Analysis
-emptyAnalysis = Analysis mempty $ PriceIntent "none" (Money 0 XXX)
+emptyAnalysis = Analysis mempty emptyPriceIntent
+
+emptyPriceIntent :: PriceIntent
+emptyPriceIntent = PriceIntent "none" emptyMoney
+
+emptyMoney :: Money
+emptyMoney = Money 0 XXX
