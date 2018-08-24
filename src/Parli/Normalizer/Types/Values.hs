@@ -45,31 +45,31 @@ instance Monoid Context where
 
 -- Entities: Product
 data Alias = Alias
-  { aliasId   :: JuxRawId
+  { aliasId   :: JuxId
   , aliasName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''Alias
 
 data ProductFamily = ProductFamily
-  { productFamilyId   :: JuxRawId
+  { productFamilyId   :: JuxId
   , productFamilyName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''ProductFamily
 
 data ProductGeneration = ProductGeneration
-  { productGenerationId   :: JuxRawId
+  { productGenerationId   :: JuxId
   , productGenerationName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''ProductGeneration
 
 data ProductType = ProductType
-  { productTypeId   :: JuxRawId
+  { productTypeId   :: JuxId
   , productTypeName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''ProductType
 
 data ProductConfiguration = ProductConfiguration
-  { productConfigurationId   :: JuxRawId
+  { productConfigurationId   :: JuxId
   , productConfigurationName :: Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''ProductConfiguration
@@ -87,9 +87,9 @@ instance FromJSON CrawlType where
   parseJSON = normalizerEnumParseJSON CrawlTypeUnknown ''CrawlType
 
 data Crawl = Crawl
-  { crawlId          :: JuxRawId
-  , crawlSourceId    :: JuxRawId
-  , crawlPageId      :: JuxRawId
+  { crawlId          :: JuxId
+  , crawlSourceId    :: JuxId
+  , crawlPageId      :: JuxId
   , crawlType        :: CrawlType
   , crawlUrl         :: Text
   , crawlAccessedAt  :: Epoch
@@ -145,7 +145,8 @@ instance FromJSON RatingValue where
     <|> pure RatingEmpty
 
 data Rating = Rating
-  { ratingId          :: JuxRawId
+  { ratingId          :: JuxId
+  , ratingCrawlId     :: JuxId
   , ratingType        :: RatingType
   , ratingValue       :: RatingValue
   , ratingContext     :: Context

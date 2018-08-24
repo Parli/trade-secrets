@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Parli.Jux.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxRawId, JuxId(..), JuxIdMap
+, JuxId, JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
 , JuxWireMap(..), JuxLabelValue(..), wrapParseJSON
@@ -55,21 +55,21 @@ type JuxWireType e q =
   , JuxLabelValue q (JuxQueryResponse q)
   )
 
-type JuxRawId = Text
-data JuxId a = JuxId
+type JuxId = Text
+data JuxKey a = JuxKey
   { juxType  :: a
-  , juxRawId :: JuxRawId
+  , juxId :: JuxId
   } deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable)
 
-type JuxIdMap a b f = HashMap (JuxId a) (f b)
+type JuxMap a b f = HashMap (JuxKey a) (f b)
 
 -- Types with a tick are intended to be aliased to a concrete type, e.g.:
 -- type JuxStore = JuxStore' MyEntity MyQuery
-type JuxAttributes' e f = JuxIdMap (JuxAttributeType e) (JuxAttributeData e) f
-type JuxEntities' e f = JuxIdMap e (JuxEntityData e) f
-type JuxQueries' q f = JuxIdMap q (JuxQueryRequest q) f
-type JuxResponses' q f = JuxIdMap q (JuxQueryResponse q) f
-type JuxTypes' e = HashMap JuxRawId e
+type JuxAttributes' e f = JuxMap (JuxAttributeType e) (JuxAttributeData e) f
+type JuxEntities' e f = JuxMap e (JuxEntityData e) f
+type JuxQueries' q f = JuxMap q (JuxQueryRequest q) f
+type JuxResponses' q f = JuxMap q (JuxQueryResponse q) f
+type JuxTypes' e = HashMap JuxId e
 
 data JuxStore' e q = JuxStore
   { juxAttributes :: JuxAttributes' e Identity
@@ -96,7 +96,7 @@ instance JuxStoreType e q => Monoid (JuxStore' e q) where
 
 -- Intermediate structure for serialization
 newtype JuxWireMap l v
-  = JuxWireMap { getJuxWireMap :: (HashMap l (HashMap JuxRawId v)) }
+  = JuxWireMap { getJuxWireMap :: (HashMap l (HashMap JuxId v)) }
   deriving (Eq, Show, Read, Generic)
 instance (JuxLabel l) => Semigroup (JuxWireMap l v) where
   (JuxWireMap x) <> (JuxWireMap y) = JuxWireMap $ x <> y
@@ -140,9 +140,9 @@ juxWireToStore (JuxWire a e q r t) = JuxStore a' e' q' r' t'
     q' = maybe mempty toIdMap q
     r' = maybe mempty toIdMap r
     t' = maybe mempty id t
-    toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxIdMap l v Identity
+    toIdMap :: (JuxLabel l) => JuxWireMap l v -> JuxMap l v Identity
     toIdMap = HM.fromList . concatMap (uncurry toIdPair) . HM.toList . getJuxWireMap
-    toIdPair k = fmap (JuxId k *** Identity) . HM.toList
+    toIdPair k = fmap (JuxKey k *** Identity) . HM.toList
 
 juxStoreToWire :: JuxStoreType e q => JuxStore' e q -> JuxWire e q
 juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
@@ -152,10 +152,10 @@ juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
     q' = Just . toWireMap $ q
     r' = Just . toWireMap $ r
     t' = Just t
-    toWireMap :: (JuxLabel l) => JuxIdMap l v Identity -> JuxWireMap l v
+    toWireMap :: (JuxLabel l) => JuxMap l v Identity -> JuxWireMap l v
     toWireMap = JuxWireMap . HM.fromListWith (<>) . toWirePairs
     toWirePairs = fmap (uncurry embedMap . toWirePair) . HM.toList
-    toWirePair = (juxType &&& juxRawId) *** runIdentity
+    toWirePair = (juxType &&& juxId) *** runIdentity
     embedMap (l, k) = (l,) . HM.singleton k
     toWireAttributePair = getJuxAttributeEntityType . fst &&& JuxWireMap . uncurry HM.singleton
 

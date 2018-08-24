@@ -19,18 +19,18 @@ deriveJuxDataToJSON ''Entity
 deriveJuxDataFromJSON ''Entity
 
 data Attribute
-  = ProductFamilyAliasIds         [JuxRawId]
+  = ProductFamilyAliasIds         [JuxId]
   | ProductFamilyPriceObj         Value.Money
-  | ProductFamilyRatingIds        [JuxRawId]
-  | ProductGenerationAliasIds     [JuxRawId]
+  | ProductFamilyRatingIds        [JuxId]
+  | ProductGenerationAliasIds     [JuxId]
   | ProductGenerationPriceObj     Value.Money
-  | ProductGenerationRatingIds    [JuxRawId]
-  | ProductTypeAliasIds           [JuxRawId]
+  | ProductGenerationRatingIds    [JuxId]
+  | ProductTypeAliasIds           [JuxId]
   | ProductTypePriceObj           Value.Money
-  | ProductTypeRatingIds          [JuxRawId]
-  | ProductConfigurationAliasIds  [JuxRawId]
+  | ProductTypeRatingIds          [JuxId]
+  | ProductConfigurationAliasIds  [JuxId]
   | ProductConfigurationPriceObj  Value.Money
-  | ProductConfigurationRatingIds [JuxRawId]
+  | ProductConfigurationRatingIds [JuxId]
   deriving (Eq, Ord, Show, Read, Generic)
 deriveJuxDataToJSON ''Attribute
 deriveJuxDataFromJSON ''Attribute

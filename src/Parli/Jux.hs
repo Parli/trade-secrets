@@ -15,7 +15,7 @@ import Parli.Jux.TH
 import Parli.Jux.Types
 
 -- convenient constructors
-juxStorable :: (Hashable a) => JuxId a -> b -> JuxIdMap a b Identity
+juxStorable :: (Hashable a) => JuxKey a -> b -> JuxMap a b Identity
 juxStorable k = HM.singleton k . Identity
 
 storeAttributes :: JuxStoreType e q => JuxAttributes' e Identity -> JuxStore' e q
@@ -27,29 +27,28 @@ storeQueries xs = mempty { juxQueries = xs }
 storeResponses :: JuxStoreType e q => JuxResponses' q Identity -> JuxStore' e q
 storeResponses xs = mempty { juxResponses = xs }
 
-juxStorableType :: (Hashable e) => JuxId e -> HashMap Text e
-juxStorableType = HM.singleton . juxRawId <*> juxType
+juxStorableType :: (Hashable e) => JuxKey e -> HashMap Text e
+juxStorableType = HM.singleton . juxId <*> juxType
 
 storeTypes :: JuxStoreType e q => JuxTypes' e -> JuxStore' e q
 storeTypes xs = mempty { juxTypes = xs }
 
 -- constrained morphisms
-juxMorph :: (JuxId a -> f b -> g c) -> JuxIdMap a b f -> JuxIdMap a c g
+juxMorph :: (JuxKey a -> f b -> g c) -> JuxMap a b f -> JuxMap a c g
 juxMorph = HM.mapWithKey
 
 juxTraverse :: (Monad m)
-  => (JuxId a -> f b -> m (g c)) -> JuxIdMap a b f -> m (JuxIdMap a c g)
+  => (JuxKey a -> f b -> m (g c)) -> JuxMap a b f -> m (JuxMap a c g)
 juxTraverse action = sequence . HM.mapWithKey action
 
-juxResolve :: JuxIdMap a b Maybe -> JuxIdMap a b Identity
+juxResolve :: JuxMap a b Maybe -> JuxMap a b Identity
 juxResolve = HM.mapMaybe (fmap Identity)
 
-toAttributeId :: (a ~ JuxAttributeType e) => a -> JuxId e -> JuxId a
-toAttributeId a k = k { juxType = a }
+toAttributeKey :: (a ~ JuxAttributeType e) => a -> JuxKey e -> JuxKey a
+toAttributeKey a k = k { juxType = a }
 
-toEntityId :: (JuxEntityType e, a ~ JuxAttributeType e) => JuxId a -> JuxId e
-toEntityId k@JuxId{ juxType = a }
-  = k{ juxType = getJuxAttributeEntityType a }
+toEntityKey :: (JuxEntityType e, a ~ JuxAttributeType e) => JuxKey a -> JuxKey e
+toEntityKey k@JuxKey{ juxType = a } = k{ juxType = getJuxAttributeEntityType a }
 
 -- (de)serialization
 juxToJSONKey :: (JuxLabel a) => ToJSONKeyFunction a
