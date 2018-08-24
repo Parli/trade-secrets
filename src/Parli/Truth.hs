@@ -29,13 +29,13 @@ dogma vocabularies =
   ProtoTruth 0 vocabularies N.emptyAnalysis Nothing "" mempty
 
 data Truth = Truth
-  { trueEpoch           :: Int
-  , trueVocabularies    :: N.VocabularyList
-  , trueQuestionContext :: N.Context
-  , trueQuestionIntent  :: N.PriceIntent
-  , trueProductPrice    :: N.Money
-  , trueRatings         :: [N.Rating]
-  , trueCrawls          :: Map Text N.Crawl
+  { trueEpoch        :: Int
+  , trueVocabularies :: N.VocabularyList
+  , trueContext      :: N.Context
+  , trueIntent       :: N.PriceIntent
+  , truePrice        :: N.Money
+  , trueRatings      :: [N.Rating]
+  , trueCrawls       :: Map Text N.Crawl
   } deriving (Show)
 
 fakeNews :: Truth
