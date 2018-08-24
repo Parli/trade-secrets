@@ -4,7 +4,6 @@ module Parli.Normalizer.Jux where
 import           Parli.Jux.Types
 import qualified Parli.Normalizer.Jux.Data as Data
 import qualified Parli.Normalizer.Jux.Types as Type
-import           Parli.Normalizer.Types.Values
 
 type JuxAttributes f = JuxAttributes' Type.Entity f
 type JuxEntities f = JuxEntities' Type.Entity f

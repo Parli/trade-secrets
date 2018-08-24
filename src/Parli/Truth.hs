@@ -29,16 +29,17 @@ dogma vocabularies =
   ProtoTruth 0 vocabularies N.emptyAnalysis Nothing "" mempty
 
 data Truth = Truth
-  { trueEpoch        :: Int
-  , trueVocabularies :: N.VocabularyList
-  , trueQuestion     :: N.Analysis
-  , truePrice        :: N.Money
-  , trueRatings      :: [N.Rating]
-  , trueCrawls       :: Map Text N.Crawl
+  { trueEpoch           :: Int
+  , trueVocabularies    :: N.VocabularyList
+  , trueQuestionContext :: N.Context
+  , trueQuestionIntent  :: N.PriceIntent
+  , trueProductPrice    :: N.Money
+  , trueRatings         :: [N.Rating]
+  , trueCrawls          :: Map Text N.Crawl
   } deriving (Show)
 
 fakeNews :: Truth
-fakeNews = Truth 0 mempty N.emptyAnalysis N.emptyMoney mempty mempty
+fakeNews = Truth 0 mempty mempty N.emptyPriceIntent N.emptyMoney mempty mempty
 
 lexicon :: N.VocabularyList -> Truth
 lexicon vocabularies = fakeNews{ trueVocabularies = vocabularies }
@@ -61,9 +62,10 @@ distill proto = fromMaybe (lexicon vocab) $ do
     unwrapPrice _                                     = Nothing
     dataPrice = unwrapPrice =<< juxLookupAttribute productPriceKey jux
   price <- getAlt . fold $ Alt <$> [protoPrice, dataPrice, Just N.emptyMoney]
-  pure $ Truth epoch vocab question price ratings crawls
+  pure $ Truth epoch vocab context intent price ratings crawls
   where
     (ProtoTruth epoch vocab question protoPrice product jux) = proto
+    (N.Analysis context intent) = question
     ratings = M.elems . M.filter cromulent $ allRatings
     cromulent rating = M.member (N.ratingCrawlId rating) crawls
     crawls = M.fromList $ (N.crawlId &&& id) <$> M.elems collapsed
