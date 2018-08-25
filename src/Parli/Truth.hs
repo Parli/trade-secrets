@@ -8,6 +8,7 @@ import           RIO hiding (product)
 import qualified RIO.Map as M
 
 import Data.Monoid
+import Data.Currency
 
 import qualified Parli.Normalizer.Jux.Types as Type
 import qualified Parli.Normalizer.Jux.Data as Data
@@ -61,7 +62,8 @@ distill proto = fromMaybe (lexicon vocab) $ do
     unwrapPrice (Data.ProductConfigurationPriceObj x) = Just x
     unwrapPrice _                                     = Nothing
     dataPrice = unwrapPrice =<< juxLookupAttribute productPriceKey jux
-  price <- getAlt . fold $ Alt <$> [protoPrice, dataPrice, Just N.emptyMoney]
+  price <- getAlt . fold $ Alt <$> [protoPrice, dataPrice]
+  guard $ N.moneyCurrency price == USD
   pure $ Truth epoch vocab context intent price ratings crawls
   where
     (ProtoTruth epoch vocab question protoPrice product jux) = proto
