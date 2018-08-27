@@ -132,16 +132,19 @@ deriveNormalizerObjectJSON ''Score
 data RatingValue
   = RatingValueRank Rank
   | RatingValueScore Score
+  | RatingValueText Text
   | RatingValueEmpty
   deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 instance ToJSON RatingValue where
   toJSON (RatingValueRank x)  = toJSON x
   toJSON (RatingValueScore x) = toJSON x
-  toJSON _               = Null
+  toJSON (RatingValueText x)  = toJSON x
+  toJSON _                    = toJSON True
 instance FromJSON RatingValue where
   parseJSON v
     =   RatingValueRank <$> parseJSON v
     <|> RatingValueScore <$> parseJSON v
+    <|> RatingValueText <$> parseJSON v
     <|> pure RatingValueEmpty
 
 data Rating = Rating
