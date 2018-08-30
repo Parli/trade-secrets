@@ -31,9 +31,9 @@ data PriceIntent = PriceIntent
 deriveNormalizerObjectJSON ''PriceIntent
 
 data Context = Context
-  { contextCategories :: HashSet Text
-  , contextKeywords   :: HashSet Text
-  , contextFilters    :: HashSet Text
+  { contextMlCategoryIds :: HashSet Text
+  , contextMlKeywordIds  :: HashSet Text
+  , contextMlFilterIds   :: HashSet Text
   } deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 deriveNormalizerObjectJSON ''Context
 instance Semigroup Context where
