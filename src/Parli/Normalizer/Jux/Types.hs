@@ -39,9 +39,3 @@ instance ToJSONKey Attribute where toJSONKey = juxToJSONKey
 instance FromJSONKey Attribute where fromJSONKey = juxFromJSONKey "Attribute"
 
 type Query = JuxVacantType
--- data Query
---   = Query
---   deriving (Eq, Ord, Show, Read, Generic, Hashable)
--- deriveJuxLabelJSON ''Query
--- instance ToJSONKey Query where toJSONKey = juxToJSONKey
--- instance FromJSONKey Query where fromJSONKey = juxFromJSONKey "Query"
