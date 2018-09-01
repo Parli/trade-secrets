@@ -25,11 +25,12 @@ fetchRatingsEntities :: (MonadNormalizer env m) => RatingsRequest -> m JuxStore
 fetchRatingsEntities body
   = maybe mempty id <$> post "/batch/input_layer" body
 
-fetchQuestionAnalysis :: (MonadNormalizer env m) => Text -> m Analysis
-fetchQuestionAnalysis question
-  = maybe emptyAnalysis id <$> get "/getAnalysis" query
-  where
-    query = catMaybes [toQueryWith queryText "query" <$> Just question]
+fetchQuestionAnalysis :: (MonadNormalizer env m) => Int -> Text -> m Analysis
+fetchQuestionAnalysis version question
+  = maybe emptyAnalysis id <$> get "/getAnalysis"
+    [ toQueryWith queryText "query" question
+    , toQueryWith queryShow "version_time" version
+    ]
 
 fetchVocabularies :: (MonadNormalizer env m) => Int -> m VocabularyList
 fetchVocabularies version
