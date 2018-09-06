@@ -7,7 +7,7 @@ import Data.Aeson
 import Parli.Jux
 
 data JuxVacantType = JuxVacantType
-  deriving (Eq, Show, Read, Generic, Hashable)
+  deriving (Eq, Show, Read, Generic, Hashable, NFData)
 deriveJuxLabelJSON ''JuxVacantType
 instance ToJSONKey JuxVacantType where
   toJSONKey = juxToJSONKey
