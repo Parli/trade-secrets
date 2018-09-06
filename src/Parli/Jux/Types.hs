@@ -107,9 +107,8 @@ instance (JuxLabelValue l v) => ToJSON (JuxWireMap l v) where
   toJSON = toJSON . getJuxWireMap
 instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
   parseJSON = withObject "JuxWireMap"
-    $ fmap (JuxWireMap . HM.fromList)
-    . traverse (sequence . uncurry go) . catMaybes
-    . fmap (sequenceFst . first readJuxLabelMaybe) . HM.toList
+    $ fmap (JuxWireMap . HM.fromList) . traverse (sequence . uncurry go)
+    . mapMaybe (sequenceFst . first readJuxLabelMaybe) . HM.toList
     where
       go l = (l,) . withObject "JuxRawIdMap" (traverse $ juxLabelValueParseJSON l)
       readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
