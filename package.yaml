@@ -18,6 +18,8 @@ dependencies:
 - aeson
 - casing
 - cassava
+- cereal
+- cereal-text
 - clock
 - currency-codes
 - data-default

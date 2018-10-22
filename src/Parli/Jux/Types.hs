@@ -17,11 +17,15 @@ import qualified RIO.HashMap as HM
 
 import           Data.Aeson
 import qualified Data.Aeson.Types as Aeson
+import           Data.Serialize
 import           Data.Tuple
+import           Parli.Jux.Orphans ()
 
+-- The stuff these are for should live elsewhere
 import qualified RIO.Text as T
 import           Text.Casing
 import           Text.Read
+
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
 type JuxLabel a = (JuxValue a, Read a, Hashable a, ToJSONKey a, FromJSONKey a)
@@ -57,9 +61,10 @@ type JuxWireType e q =
 
 type JuxId = Text
 data JuxKey a = JuxKey
-  { juxType  :: a
-  , juxId :: JuxId
+  { juxType :: a
+  , juxId   :: JuxId
   } deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable, NFData)
+deriving instance Serialize a => Serialize (JuxKey a)
 
 type JuxMap a b f = HashMap (JuxKey a) (f b)
 
@@ -81,6 +86,11 @@ data JuxStore' e q = JuxStore
 deriving instance JuxStoreType e q => Eq (JuxStore' e q)
 deriving instance JuxStoreType e q => Show (JuxStore' e q)
 deriving instance JuxStoreType e q => NFData (JuxStore' e q)
+deriving instance
+  ( JuxStoreType e q, Serialize e, Serialize (JuxEntityData e)
+  , Serialize (JuxAttributeType e), Serialize (JuxAttributeData e)
+  , Serialize q, Serialize (JuxQueryRequest q), Serialize (JuxQueryResponse q)
+  ) => Serialize (JuxStore' e q)
 instance JuxWireType e q => ToJSON (JuxStore' e q) where
   toJSON = toJSON . juxStoreToWire
 instance JuxWireType e q => FromJSON (JuxStore' e q) where
