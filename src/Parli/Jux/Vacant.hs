@@ -4,10 +4,11 @@ module Parli.Jux.Vacant where
 import RIO
 
 import Data.Aeson
+import Data.Serialize
 import Parli.Jux
 
 data JuxVacantType = JuxVacantType
-  deriving (Eq, Show, Read, Generic, Hashable, NFData)
+  deriving (Eq, Show, Read, Generic, Hashable, NFData, Serialize)
 deriveJuxLabelJSON ''JuxVacantType
 instance ToJSONKey JuxVacantType where
   toJSONKey = juxToJSONKey
