@@ -1,19 +1,14 @@
 module Parli.Jux
-( module Parli.Jux.Types
-, module Parli.Jux.TH
-, module Parli.Jux
+( module Parli.Jux
+, module Parli.Jux.Internal
 ) where
 
 import           RIO
 import qualified RIO.HashMap as HM
 import qualified RIO.HashSet as HS
 
-import Data.Aeson.TH
-import Data.Aeson.Types
-import Language.Haskell.TH
-
-import Parli.Jux.TH
-import Parli.Jux.Types
+import Parli.Jux.Core
+import Parli.Jux.Internal
 
 -- convenient constructors
 juxStorable :: (Hashable a) => JuxKey a -> b -> JuxMap a b Identity
@@ -129,17 +124,3 @@ juxLookupResponse k = fmap runIdentity . HM.lookup k . juxResponses
 
 -- juxDeleteResponse :: JuxStoreType e q => JuxKey q -> JuxStore' e q -> JuxStore' e q
 -- juxDeleteResponse k jux@JuxStore{juxResponses} = jux{ juxResponses = HM.delete k juxResponses}
-
--- (de)serialization
-juxToJSONKey :: (JuxLabel a) => ToJSONKeyFunction a
-juxToJSONKey = toJSONKeyText showJuxLabel
-
-juxFromJSONKey :: (JuxLabel a) => Text -> FromJSONKeyFunction a
-juxFromJSONKey target
-  = FromJSONKeyText $ either error id . readJuxLabel (juxReadError target)
-
-deriveJuxLabelJSON :: Name -> DecsQ
-deriveJuxLabelJSON = deriveJSON defaultOptions
-  { constructorTagModifier = juxLabelToWire
-  , tagSingleConstructors = True
-  }

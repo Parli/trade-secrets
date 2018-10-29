@@ -5,7 +5,7 @@ import RIO
 
 import Data.Aeson
 import Data.Serialize
-import Parli.Jux
+import Parli.Jux.Core
 
 data JuxVacantType = JuxVacantType
   deriving (Eq, Show, Read, Generic, Hashable, NFData, Serialize)

@@ -1,13 +1,16 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Parli.Jux.TH
+module Parli.Jux.Core.TH
 ( deriveJuxDataToJSON
 , deriveJuxDataFromJSON
+, deriveJuxLabelJSON
 ) where
 
 import RIO
 
 import Data.Aeson
+import Data.Aeson.TH
 import Language.Haskell.TH
+import Parli.Jux.Internal
 
 deriveSumAsNewtype :: DecsQ -> (Con -> Q Clause) -> Name -> DecsQ
 deriveSumAsNewtype mkBase mkClause a = do
@@ -46,3 +49,9 @@ deriveJuxDataFromJSON = deriveSumAsNewtype mkBase mkClause where
       []
   mkClause _ = error
     "Can't use deriveJuxDataFromJSON with multi-parameter constructors"
+
+deriveJuxLabelJSON :: Name -> DecsQ
+deriveJuxLabelJSON = deriveJSON defaultOptions
+  { constructorTagModifier = juxLabelToWire
+  , tagSingleConstructors = True
+  }

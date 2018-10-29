@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Parli.Jux.Orphans where
+module Parli.Jux.Core.Orphans where
 
 import           RIO
 import qualified RIO.HashMap as HM

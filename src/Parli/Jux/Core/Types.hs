@@ -1,13 +1,12 @@
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Parli.Jux.Types
+module Parli.Jux.Core.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
 , JuxId, JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
-, JuxWireMap(..), JuxLabelValue(..), wrapParseJSON
-, juxLabelToWire, juxWireToLabel, showJuxLabel, readJuxLabel, juxReadError
+, JuxWireMap(..), JuxLabelValue(..)
 ) where
 
 -- TODO: factor into .Types, .Types.Internal, .Wire
@@ -19,13 +18,8 @@ import           Data.Aeson
 import qualified Data.Aeson.Types as Aeson
 import           Data.Serialize
 import           Data.Tuple
-import           Parli.Jux.Orphans ()
-
--- The stuff these are for should live elsewhere
-import qualified RIO.Text as T
-import           Text.Casing
-import           Text.Read
-
+import           Parli.Jux.Core.Orphans ()
+import           Parli.Jux.Internal
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
 type JuxLabel a = (JuxValue a, Read a, Hashable a, ToJSONKey a, FromJSONKey a)
@@ -128,9 +122,6 @@ instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
 class (JuxLabel l, JuxValue v) => JuxLabelValue l v where
   juxLabelValueParseJSON :: l -> Value -> Aeson.Parser v
 
-wrapParseJSON :: FromJSON a => (a -> v) -> Value -> Aeson.Parser v
-wrapParseJSON w = fmap w . parseJSON
-
 data JuxWire e q = JuxWire
   { attributes :: Maybe (HashMap e (JuxWireMap (JuxAttributeType e) (JuxAttributeData e)))
   , entities   :: Maybe (JuxWireMap e (JuxEntityData e))
@@ -168,22 +159,3 @@ juxStoreToWire (JuxStore a e q r t) = JuxWire a' e' q' r' t'
     toWirePair = (juxType &&& juxId) *** runIdentity
     embedMap (l, k) = (l,) . HM.singleton k
     toWireAttributePair = getJuxAttributeEntityType . fst &&& JuxWireMap . uncurry HM.singleton
-
-
--- TODO: put these not here
-juxLabelToWire, juxWireToLabel :: String -> String
-juxLabelToWire = toQuietSnake . fromHumps
-juxWireToLabel = toPascal . fromSnake
-
-showJuxLabel :: (Show a, IsString s) => a -> s
-showJuxLabel = fromString . juxLabelToWire . show
-
-readJuxLabel :: (Read a) => (Text -> e) -> Text -> Either e a
-readJuxLabel toError t = case reads s of
-  [(a,[])] -> Right a
-  _        -> Left (toError t)
-  where s = juxWireToLabel . T.unpack $ t
-
-juxReadError :: Text -> Text -> String
-juxReadError target source
-  = "Could not read type "<> show target <>" from string "<> show source
