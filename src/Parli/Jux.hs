@@ -51,8 +51,8 @@ toEntityKey k@JuxKey{ juxType = a } = k{ juxType = getJuxAttributeEntityType a }
 juxKeyHasType :: Eq a => a -> JuxKey a -> Bool
 juxKeyHasType t k = juxType k == t
 
-juxMapFilterKeys :: (JuxKey a -> Bool) -> JuxMap a b f -> JuxMap a b f
-juxMapFilterKeys f = HM.mapMaybeWithKey (\k v -> bool Nothing (Just v) $ f k)
+juxMapFilterKeys :: (k -> Bool) -> HashMap k v -> HashMap k v
+juxMapFilterKeys f = HM.filterWithKey $ flip (const f)
 
 juxMapRestrictIds :: HashSet JuxId -> JuxMap a b f -> JuxMap a b f
 juxMapRestrictIds ks = juxMapFilterKeys $ flip HS.member ks . juxId
