@@ -1,6 +1,7 @@
 module Parli.Jux
 ( module Parli.Jux
 , module Parli.Jux.Internal
+, JuxId, JuxKey
 ) where
 
 import           RIO

@@ -9,8 +9,6 @@ module Parli.Jux.Core.Types
 , JuxWireMap(..), JuxLabelValue(..)
 ) where
 
--- TODO: factor into .Types, .Types.Internal, .Wire
-
 import           RIO
 import qualified RIO.HashMap as HM
 
