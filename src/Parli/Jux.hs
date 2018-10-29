@@ -6,6 +6,7 @@ module Parli.Jux
 
 import           RIO
 import qualified RIO.HashMap as HM
+import qualified RIO.HashSet as HS
 
 import Data.Aeson.TH
 import Data.Aeson.Types
@@ -51,14 +52,20 @@ toEntityKey :: (JuxEntityType e, a ~ JuxAttributeType e) => JuxKey a -> JuxKey e
 toEntityKey k@JuxKey{ juxType = a } = k{ juxType = getJuxAttributeEntityType a }
 
 -- filtration/extraction
-juxKeyHasType :: Eq a => JuxKey a -> a -> Bool
-juxKeyHasType k t = juxType k == t
+juxKeyHasType :: Eq a => a -> JuxKey a -> Bool
+juxKeyHasType t k = juxType k == t
 
-juxMapFilterByType :: Eq a => a -> JuxMap a b f -> JuxMap a b f
-juxMapFilterByType t = HM.mapMaybeWithKey $ \(JuxKey t' _) v -> bool Nothing (Just v) (t'==t)
+juxMapFilterKeys :: (JuxKey a -> Bool) -> JuxMap a b f -> JuxMap a b f
+juxMapFilterKeys f = HM.mapMaybeWithKey (\k v -> bool Nothing (Just v) $ f k)
+
+juxMapRestrictIds :: HashSet JuxId -> JuxMap a b f -> JuxMap a b f
+juxMapRestrictIds ks = juxMapFilterKeys $ flip HS.member ks . juxId
+
+juxMapRestrictTypes :: (Eq a, Hashable a) => HashSet a -> JuxMap a b f -> JuxMap a b f
+juxMapRestrictTypes ts = juxMapFilterKeys $ flip HS.member ts . juxType
 
 juxStoreDataOfType :: Eq a => a -> JuxMap a b Identity -> [b]
-juxStoreDataOfType t = fmap runIdentity . HM.elems . juxMapFilterByType t
+juxStoreDataOfType t = fmap runIdentity . HM.elems . juxMapFilterKeys (juxKeyHasType t)
 
 -- element operations
 juxLookupType :: JuxStoreType e q => JuxId -> JuxStore' e q -> Maybe e
