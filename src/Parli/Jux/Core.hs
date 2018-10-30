@@ -19,3 +19,6 @@ juxToJSONKey = toJSONKeyText showJuxLabel
 juxFromJSONKey :: (JuxLabel a) => Text -> FromJSONKeyFunction a
 juxFromJSONKey target
   = FromJSONKeyText $ either error id . readJuxLabel (juxReadError target)
+
+wrapParseJSON :: FromJSON a => (a -> v) -> Value -> Parser v
+wrapParseJSON w = fmap w . parseJSON

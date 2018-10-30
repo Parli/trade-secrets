@@ -12,12 +12,11 @@ module Parli.Jux.Core.Types
 import           RIO
 import qualified RIO.HashMap as HM
 
-import           Data.Aeson
-import qualified Data.Aeson.Types as Aeson
-import           Data.Serialize
-import           Data.Tuple
-import           Parli.Jux.Core.Orphans ()
-import           Parli.Jux.Internal
+import Data.Aeson.Types
+import Data.Serialize
+import Data.Tuple
+import Parli.Jux.Core.Orphans ()
+import Parli.Jux.Internal
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
 type JuxLabel a = (JuxValue a, Read a, Hashable a, ToJSONKey a, FromJSONKey a)
@@ -118,7 +117,7 @@ instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
       sequenceFst = fmap swap . sequence . swap
 
 class (JuxLabel l, JuxValue v) => JuxLabelValue l v where
-  juxLabelValueParseJSON :: l -> Value -> Aeson.Parser v
+  juxLabelValueParseJSON :: l -> Value -> Parser v
 
 data JuxWire e q = JuxWire
   { attributes :: Maybe (HashMap e (JuxWireMap (JuxAttributeType e) (JuxAttributeData e)))
