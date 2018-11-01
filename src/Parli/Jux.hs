@@ -63,6 +63,12 @@ juxMapRestrictTypes ts = juxMapFilterKeys $ flip HS.member ts . juxType
 juxStoreDataOfType :: Eq a => a -> JuxMap a b Identity -> [b]
 juxStoreDataOfType t = fmap runIdentity . HM.elems . juxMapFilterKeys (juxKeyHasType t)
 
+juxTypesRestrictIds :: HashSet JuxId -> JuxTypes' e -> JuxTypes' e
+juxTypesRestrictIds ks = juxMapFilterKeys $ flip HS.member ks
+
+juxTypesRestrictTypes :: (Eq e, Hashable e) => HashSet e -> JuxTypes' e -> JuxTypes' e
+juxTypesRestrictTypes ts = HM.filter $ flip HS.member ts
+
 -- element operations
 juxLookupType :: JuxStoreType e q => JuxId -> JuxStore' e q -> Maybe e
 juxLookupType k = HM.lookup k . juxTypes
