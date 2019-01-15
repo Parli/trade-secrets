@@ -3,6 +3,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Parli.Jux.Core.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
+, JuxUnwrap(..)
+, JuxUnwrapEntity', JuxUnwrapAttribute', JuxUnwrapQuery', JuxUnwrapResponse'
 , JuxId, JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
@@ -49,6 +51,13 @@ type JuxWireType e q =
   , JuxLabelValue q (JuxQueryRequest q)
   , JuxLabelValue q (JuxQueryResponse q)
   )
+
+data JuxUnwrap a b c where
+  JuxUnwrap :: (Eq a, Hashable a) => a -> (b -> c) -> JuxUnwrap a b c
+type JuxUnwrapEntity' e a = JuxUnwrap e (JuxEntityData e) a
+type JuxUnwrapAttribute' e a = JuxUnwrap (JuxAttributeType e) (JuxAttributeData e) a
+type JuxUnwrapQuery' q a = JuxUnwrap q (JuxQueryRequest q) a
+type JuxUnwrapResponse' q a = JuxUnwrap q (JuxQueryResponse q) a
 
 type JuxId = Text
 data JuxKey a = JuxKey
