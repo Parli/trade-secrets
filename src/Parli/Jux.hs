@@ -74,6 +74,9 @@ type JuxUnwrapAttribute e a = JuxUnwrap (JuxAttributeType e) (JuxAttributeData e
 type JuxUnwrapQuery q a = JuxUnwrap q (JuxQueryRequest q) a
 type JuxUnwrapResponse q a = JuxUnwrap q (JuxQueryResponse q) a
 
+juxUnwrap :: JuxUnwrap a b c -> b -> c
+juxUnwrap (JuxUnwrap _ un) = un
+
 juxMapData :: JuxUnwrap a b c -> JuxMap a b Identity -> [c]
 juxMapData (JuxUnwrap t un)
   = fmap (un . runIdentity) . HM.elems . juxMapFilterKeys (juxKeyHasType t)
