@@ -67,8 +67,21 @@ juxTypesRestrictTypes :: (Eq e, Hashable e) => HashSet e -> JuxTypes' e -> JuxTy
 juxTypesRestrictTypes ts = HM.filter $ flip HS.member ts
 
 -- extraction
-juxUnwrap :: JuxUnwrap a b c -> b -> c
-juxUnwrap (JuxUnwrap _ un) = un
+juxUnwrapUnsafe :: JuxUnwrap a b c -> b -> c
+juxUnwrapUnsafe (JuxUnwrap _ un) = un
+juxUnwrapChecking :: (b -> a) -> JuxUnwrap a b c -> b -> Maybe c
+juxUnwrapChecking is (JuxUnwrap t un) d
+  = if is d == t then Just (un d) else Nothing
+
+juxUnwrapEntity :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxEntityData e -> Maybe a
+juxUnwrapEntity = juxUnwrapChecking getJuxDataEntityType
+juxUnwrapAttribute :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxAttributeData e -> Maybe a
+juxUnwrapAttribute = juxUnwrapChecking getJuxDataAttributeType
+juxUnwrapQuery :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxQueryRequest q -> Maybe a
+juxUnwrapQuery = juxUnwrapChecking getJuxRequestQuery
+juxUnwrapResponse :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxQueryResponse q -> Maybe a
+juxUnwrapResponse = juxUnwrapChecking getJuxResponseQuery
+
 
 juxMapData :: JuxUnwrap a b c -> JuxMap a b Identity -> [c]
 juxMapData (JuxUnwrap t un)
