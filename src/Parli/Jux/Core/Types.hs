@@ -3,8 +3,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Parli.Jux.Core.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxUnwrap(..)
-, JuxUnwrapEntity', JuxUnwrapAttribute', JuxUnwrapQuery', JuxUnwrapResponse'
 , JuxId, JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
@@ -21,7 +19,7 @@ import Parli.Jux.Core.Orphans ()
 import Parli.Jux.Internal
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
-type JuxLabel a = (JuxValue a, Read a, Hashable a, ToJSONKey a, FromJSONKey a)
+type JuxLabel a = (JuxValue a, Ord a, Hashable a, Read a, ToJSONKey a, FromJSONKey a)
 
 class
   ( JuxLabel a, JuxLabel (JuxAttributeType a)
@@ -51,13 +49,6 @@ type JuxWireType e q =
   , JuxLabelValue q (JuxQueryRequest q)
   , JuxLabelValue q (JuxQueryResponse q)
   )
-
-data JuxUnwrap a b c where
-  JuxUnwrap :: (Eq a, Hashable a) => a -> (b -> c) -> JuxUnwrap a b c
-type JuxUnwrapEntity' e a = JuxUnwrap e (JuxEntityData e) a
-type JuxUnwrapAttribute' e a = JuxUnwrap (JuxAttributeType e) (JuxAttributeData e) a
-type JuxUnwrapQuery' q a = JuxUnwrap q (JuxQueryRequest q) a
-type JuxUnwrapResponse' q a = JuxUnwrap q (JuxQueryResponse q) a
 
 type JuxId = Text
 data JuxKey a = JuxKey

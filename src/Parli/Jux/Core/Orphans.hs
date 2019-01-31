@@ -8,7 +8,7 @@ import qualified RIO.HashSet as HS
 import Data.Serialize
 import Data.Serialize.Text ()
 
-deriving instance Serialize a => Serialize (Identity a)
+deriving newtype instance Serialize a => Serialize (Identity a)
 
 instance (Eq k, Hashable k, Serialize k, Serialize v)
   => Serialize (HashMap k v) where

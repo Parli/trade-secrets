@@ -8,7 +8,7 @@ import Data.Serialize
 import Parli.Jux.Core
 
 data JuxVacantType = JuxVacantType
-  deriving (Eq, Show, Read, Generic, Hashable, NFData, Serialize)
+  deriving (Eq, Ord, Show, Read, Generic, Hashable, NFData, Serialize)
 deriveJuxLabelJSON ''JuxVacantType
 instance ToJSONKey JuxVacantType where
   toJSONKey = juxToJSONKey

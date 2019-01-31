@@ -10,6 +10,7 @@ import qualified RIO.HashSet as HS
 
 import Parli.Jux.Core
 import Parli.Jux.Internal
+import Parli.Jux.Unwrap
 
 -- convenient constructors
 juxStorable :: (Hashable a) => JuxKey a -> b -> JuxMap a b Identity
@@ -67,12 +68,6 @@ juxTypesRestrictTypes :: (Eq e, Hashable e) => HashSet e -> JuxTypes' e -> JuxTy
 juxTypesRestrictTypes ts = HM.filter $ flip HS.member ts
 
 -- extraction
-juxDataUnsafe :: JuxUnwrap a b c -> b -> c
-juxDataUnsafe (JuxUnwrap _ un) = un
-juxDataChecking :: (b -> a) -> JuxUnwrap a b c -> b -> Maybe c
-juxDataChecking is (JuxUnwrap t un) d
-  = if is d == t then Just (un d) else Nothing
-
 juxEntityData :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxEntityData e -> Maybe a
 juxEntityData = juxDataChecking getJuxDataEntityType
 juxAttributeData :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxAttributeData e -> Maybe a
@@ -82,50 +77,65 @@ juxQueryData = juxDataChecking getJuxRequestQuery
 juxResponseData :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxQueryResponse q -> Maybe a
 juxResponseData = juxDataChecking getJuxResponseQuery
 
-juxMapData :: JuxUnwrap a b c -> JuxMap a b Identity -> [c]
-juxMapData (JuxUnwrap t un)
-  = fmap (un . runIdentity) . HM.elems . juxMapFilterKeys (juxKeyHasType t)
-juxMapDataPairs :: JuxUnwrap a b c -> JuxMap a b Identity -> [(JuxId, c)]
-juxMapDataPairs (JuxUnwrap t un)
-  = fmap (juxId *** un . runIdentity) . HM.toList . juxMapFilterKeys (juxKeyHasType t)
-juxMapDataLookupKey :: JuxUnwrap a b c -> JuxKey a -> JuxMap a b Identity -> Maybe c
-juxMapDataLookupKey (JuxUnwrap _ un) k = fmap (un . runIdentity) . HM.lookup k
-juxMapDataLookupId :: JuxUnwrap a b c -> JuxId -> JuxMap a b Identity -> Maybe c
-juxMapDataLookupId u@(JuxUnwrap t _) k = juxMapDataLookupKey u (JuxKey t k)
+juxMapDataPairs :: JuxLabel a => JuxUnwrap a b c -> JuxMap a b Identity -> [(JuxKey a, c)]
+juxMapDataPairs un = mapMaybe (sequence . go) . HM.toList . juxMapRestrictTypes typeSet
+  where
+  go (k, d) = (k,) . juxDataKeyed un k $ runIdentity d
+  typeSet = HS.fromList $ juxUnwrapTypes un
+juxMapData :: JuxLabel a => JuxUnwrap a b c -> JuxMap a b Identity -> [c]
+juxMapData un = fmap snd . juxMapDataPairs un
+juxMapDataPairsId :: JuxLabel a => JuxUnwrap a b c -> JuxMap a b Identity -> [(JuxId, c)]
+juxMapDataPairsId un = fmap (first juxId) . juxMapDataPairs un
+juxMapDataLookup :: JuxLabel a => JuxUnwrap a b c -> JuxKey a -> JuxMap a b Identity -> Maybe c
+juxMapDataLookup un k j = juxDataKeyed un k =<< runIdentity <$> HM.lookup k j
+juxMapDataLookupId :: JuxLabel a => JuxUnwrap a b c -> JuxId -> JuxMap a b Identity -> Maybe c
+juxMapDataLookupId un k j = uncurry (juxDataKeyed un) =<< d
+  where
+  d = listToMaybe $ mapMaybe (sequence . go) altKeys
+  go = id &&& fmap runIdentity . flip HM.lookup j
+  altKeys = flip JuxKey k <$> juxUnwrapTypes un
 
 juxStoreEntitiesData :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxStore' e q -> [a]
 juxStoreEntitiesData u = juxMapData u . juxEntities
-juxStoreEntitiesDataPairs :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreEntitiesDataPairs :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxStore' e q -> [(JuxKey e, a)]
 juxStoreEntitiesDataPairs u = juxMapDataPairs u . juxEntities
-juxStoreEntitiesDataLookupKey :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxKey e -> JuxStore' e q -> Maybe a
-juxStoreEntitiesDataLookupKey u k = juxMapDataLookupKey u k . juxEntities
+juxStoreEntitiesDataPairsId :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreEntitiesDataPairsId u = juxMapDataPairsId u . juxEntities
+juxStoreEntitiesDataLookup :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxKey e -> JuxStore' e q -> Maybe a
+juxStoreEntitiesDataLookup u k = juxMapDataLookup u k . juxEntities
 juxStoreEntitiesDataLookupId :: JuxEntityType e => JuxUnwrapEntity' e a -> JuxId -> JuxStore' e q -> Maybe a
 juxStoreEntitiesDataLookupId u k = juxMapDataLookupId u k . juxEntities
 
 juxStoreAttributesData :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxStore' e q -> [a]
 juxStoreAttributesData u = juxMapData u . juxAttributes
-juxStoreAttributesDataPairs :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreAttributesDataPairs :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxStore' e q -> [(JuxKey (JuxAttributeType e), a)]
 juxStoreAttributesDataPairs u = juxMapDataPairs u . juxAttributes
-juxStoreAttributesDataLookupKey :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxKey (JuxAttributeType e) -> JuxStore' e q -> Maybe a
-juxStoreAttributesDataLookupKey u k = juxMapDataLookupKey u k . juxAttributes
+juxStoreAttributesDataPairsId :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreAttributesDataPairsId u = juxMapDataPairsId u . juxAttributes
+juxStoreAttributesDataLookup :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxKey (JuxAttributeType e) -> JuxStore' e q -> Maybe a
+juxStoreAttributesDataLookup u k = juxMapDataLookup u k . juxAttributes
 juxStoreAttributesDataLookupId :: JuxEntityType e => JuxUnwrapAttribute' e a -> JuxId -> JuxStore' e q -> Maybe a
 juxStoreAttributesDataLookupId u k = juxMapDataLookupId u k . juxAttributes
 
 juxStoreQueriesData :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxStore' e q -> [a]
 juxStoreQueriesData u = juxMapData u . juxQueries
-juxStoreQueriesDataPairs :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreQueriesDataPairs :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxStore' e q -> [(JuxKey q, a)]
 juxStoreQueriesDataPairs u = juxMapDataPairs u . juxQueries
-juxStoreQueriesDataLookupKey :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxKey q -> JuxStore' e q -> Maybe a
-juxStoreQueriesDataLookupKey u k = juxMapDataLookupKey u k . juxQueries
+juxStoreQueriesDataPairsId :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreQueriesDataPairsId u = juxMapDataPairsId u . juxQueries
+juxStoreQueriesDataLookup :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxKey q -> JuxStore' e q -> Maybe a
+juxStoreQueriesDataLookup u k = juxMapDataLookup u k . juxQueries
 juxStoreQueriesDataLookupId :: JuxQueryType q => JuxUnwrapQuery' q a -> JuxId -> JuxStore' e q -> Maybe a
 juxStoreQueriesDataLookupId u k = juxMapDataLookupId u k . juxQueries
 
 juxStoreResponsesData :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxStore' e q -> [a]
 juxStoreResponsesData u = juxMapData u . juxResponses
-juxStoreResponsesDataPairs :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreResponsesDataPairs :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxStore' e q -> [(JuxKey q, a)]
 juxStoreResponsesDataPairs u = juxMapDataPairs u . juxResponses
-juxStoreResponsesDataLookupKey :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxKey q -> JuxStore' e q -> Maybe a
-juxStoreResponsesDataLookupKey u k = juxMapDataLookupKey u k . juxResponses
+juxStoreResponsesDataPairsId :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxStore' e q -> [(JuxId, a)]
+juxStoreResponsesDataPairsId u = juxMapDataPairsId u . juxResponses
+juxStoreResponsesDataLookup :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxKey q -> JuxStore' e q -> Maybe a
+juxStoreResponsesDataLookup u k = juxMapDataLookup u k . juxResponses
 juxStoreResponsesDataLookupId :: JuxQueryType q => JuxUnwrapResponse' q a -> JuxId -> JuxStore' e q -> Maybe a
 juxStoreResponsesDataLookupId u k = juxMapDataLookupId u k . juxResponses
 
