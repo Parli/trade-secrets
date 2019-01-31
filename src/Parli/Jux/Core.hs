@@ -4,6 +4,7 @@ module Parli.Jux.Core
 , module Parli.Jux.Core.TH
 , module Parli.Jux.Core.Types
 , JuxUnwrap, mkJuxUnwrap
+, JuxUnwrapEntity', JuxUnwrapAttribute', JuxUnwrapQuery', JuxUnwrapResponse'
 ) where
 
 import RIO
