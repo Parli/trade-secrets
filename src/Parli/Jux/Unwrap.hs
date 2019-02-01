@@ -17,20 +17,19 @@ type JuxUnwrapResponse' q a = JuxUnwrap q (JuxQueryResponse q) a
 mkJuxUnwrap :: JuxLabel a => a -> (b -> c) -> JuxUnwrap a b c
 mkJuxUnwrap t = JuxUnwrap . M.singleton t
 
-juxUnwrapPairs :: JuxLabel a => JuxUnwrap a b c -> [(a, b -> c)]
-juxUnwrapPairs = M.toList . getJuxUnwrap
-
-juxUnwrappers :: JuxLabel a => JuxUnwrap a b c -> [b -> c]
-juxUnwrappers = M.elems . getJuxUnwrap
-
 juxUnwrapTypes :: JuxLabel a => JuxUnwrap a b c -> [a]
 juxUnwrapTypes = M.keys . getJuxUnwrap
 
 juxDataChecking :: JuxLabel a => (b -> a) -> JuxUnwrap a b c -> b -> Maybe c
 juxDataChecking is un d
-  = getAlt . fold . fmap (Alt . tryUnwrap) $ juxUnwrapPairs un
+  = getAlt . fold . fmap (Alt . tryUnwrap) . M.toList $ getJuxUnwrap un
   where
   tryUnwrap (t, un') = if is d == t then Just (un' d) else Nothing
 
+juxDataTyped :: JuxLabel a => JuxUnwrap a b c -> a -> b -> Maybe c
+juxDataTyped un t d = do
+  un' <- M.lookup t $ getJuxUnwrap un
+  pure $ un' d
+
 juxDataKeyed :: JuxLabel a => JuxUnwrap a b c -> JuxKey a -> b -> Maybe c
-juxDataKeyed un (JuxKey t _) = juxDataChecking (const t) un
+juxDataKeyed un = juxDataTyped un . juxType
