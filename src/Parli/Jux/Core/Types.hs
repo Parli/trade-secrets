@@ -12,10 +12,9 @@ module Parli.Jux.Core.Types
 import           RIO
 import qualified RIO.HashMap as HM
 
+import Codec.Serialise
 import Data.Aeson.Types
-import Data.Serialize
 import Data.Tuple
-import Parli.Jux.Core.Orphans ()
 import Parli.Jux.Internal
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
@@ -55,7 +54,7 @@ data JuxKey a = JuxKey
   { juxType :: a
   , juxId   :: JuxId
   } deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable, NFData)
-deriving instance Serialize a => Serialize (JuxKey a)
+deriving instance Serialise a => Serialise (JuxKey a)
 
 type JuxMap a b f = HashMap (JuxKey a) (f b)
 
@@ -78,10 +77,10 @@ deriving instance JuxStoreType e q => Eq (JuxStore' e q)
 deriving instance JuxStoreType e q => Show (JuxStore' e q)
 deriving instance JuxStoreType e q => NFData (JuxStore' e q)
 deriving instance
-  ( JuxStoreType e q, Serialize e, Serialize (JuxEntityData e)
-  , Serialize (JuxAttributeType e), Serialize (JuxAttributeData e)
-  , Serialize q, Serialize (JuxQueryRequest q), Serialize (JuxQueryResponse q)
-  ) => Serialize (JuxStore' e q)
+  ( JuxStoreType e q, Serialise e, Serialise (JuxEntityData e)
+  , Serialise (JuxAttributeType e), Serialise (JuxAttributeData e)
+  , Serialise q, Serialise (JuxQueryRequest q), Serialise (JuxQueryResponse q)
+  ) => Serialise (JuxStore' e q)
 instance JuxWireType e q => ToJSON (JuxStore' e q) where
   toJSON = toJSON . juxStoreToWire
 instance JuxWireType e q => FromJSON (JuxStore' e q) where

@@ -18,8 +18,6 @@ dependencies:
 - aeson
 - casing
 - cassava
-- cereal
-- cereal-text
 - clock
 - currency-codes
 - data-default
@@ -27,6 +25,7 @@ dependencies:
 - http-types
 - lens
 - magicbane
+- serialise
 - time
 - wai
 - wai-extra
