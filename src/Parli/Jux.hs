@@ -13,6 +13,11 @@ import Parli.Jux.Internal
 import Parli.Jux.Unwrap
 
 -- convenient constructors
+badJuxId :: JuxId
+badJuxId = JuxId ""
+isBadJuxId :: JuxId -> Bool
+isBadJuxId (JuxId bs) = bs == ""
+
 juxStorable :: (Hashable a) => JuxKey a -> b -> JuxMap a b Identity
 juxStorable k = HM.singleton k . Identity
 

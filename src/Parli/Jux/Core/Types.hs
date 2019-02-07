@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Parli.Jux.Core.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxId, JuxKey(..), JuxMap
+, JuxId(..), JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
 , JuxWireMap(..), JuxLabelValue(..)
@@ -55,7 +55,6 @@ type JuxWireType e q =
 
 newtype JuxId = JuxId { juxIdBytes :: ByteString }
   deriving newtype (Eq, Ord, Show, Read, Typeable, Hashable, NFData, Serialise)
-  deriving anyclass (Data, Generic)
 instance Display JuxId where
   display = displayBytesUtf8 . juxIdBytes
 instance FromJSON JuxId where
@@ -70,7 +69,7 @@ instance ToJSONKey JuxId
 data JuxKey a = JuxKey
   { juxType :: a
   , juxId   :: JuxId
-  } deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable, NFData)
+  } deriving (Eq, Ord, Show, Typeable, Generic, Hashable, NFData)
 deriving instance Serialise a => Serialise (JuxKey a)
 
 type JuxMap a b f = HashMap (JuxKey a) (f b)
