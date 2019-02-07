@@ -54,7 +54,7 @@ type JuxWireType e q =
   )
 
 newtype JuxId = JuxId { juxIdBytes :: ByteString }
-  deriving newtype (Eq, Ord, Show, Read, Typeable, Hashable, NFData, Serialise)
+  deriving newtype (Eq, Ord, Show, Read, Typeable, IsString, Hashable, NFData, Serialise)
 instance Display JuxId where
   display = displayBytesUtf8 . juxIdBytes
 instance FromJSON JuxId where
