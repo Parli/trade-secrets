@@ -16,6 +16,7 @@ dependencies:
 - template-haskell
 
 - aeson
+- binary
 - casing
 - cassava
 - clock
@@ -26,6 +27,7 @@ dependencies:
 - lens
 - magicbane
 - serialise
+- text
 - time
 - wai
 - wai-extra
