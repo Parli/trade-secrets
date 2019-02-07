@@ -63,8 +63,10 @@ instance ToJSON JuxId where
   toJSON = toJSON . decodeUtf8 . juxIdBytes -- throws on failed decode!
   -- toJSON = toJSON . either (const "") id . decodeUtf8'
   toEncoding = Encoding . fromByteString . juxIdBytes
-instance FromJSONKey JuxId
-instance ToJSONKey JuxId
+instance FromJSONKey JuxId where
+  fromJSONKey = FromJSONKeyText $ JuxId . encodeUtf8
+instance ToJSONKey JuxId where
+  toJSONKey = toJSONKeyText $ decodeUtf8 . juxIdBytes
 
 data JuxKey a = JuxKey
   { juxType :: a
