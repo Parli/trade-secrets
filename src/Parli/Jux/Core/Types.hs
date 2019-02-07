@@ -53,20 +53,20 @@ type JuxWireType e q =
   , JuxLabelValue q (JuxQueryResponse q)
   )
 
-newtype JuxId = JuxId { juxIdBytes :: ByteString }
+newtype JuxId = JuxId { juxIdBytes :: ShortByteString }
   deriving newtype (Eq, Ord, Show, Read, Typeable, IsString, Hashable, NFData, Serialise)
 instance Display JuxId where
-  display = displayBytesUtf8 . juxIdBytes
+  display = displayBytesUtf8 . fromShort . juxIdBytes
 instance FromJSON JuxId where
-  parseJSON = fmap (JuxId . encodeUtf8) . parseJSON
+  parseJSON = fmap (JuxId . toShort . encodeUtf8) . parseJSON
 instance ToJSON JuxId where
-  toJSON = toJSON . decodeUtf8 . juxIdBytes -- throws on failed decode!
-  -- toJSON = toJSON . either (const "") id . decodeUtf8'
-  toEncoding = Encoding . fromByteString . juxIdBytes
+  toJSON = toJSON . decodeUtf8 . fromShort . juxIdBytes -- throws on failed decode!
+  -- toJSON = toJSON . either (const "") id . fromShort . decodeUtf8'
+  toEncoding = Encoding . fromByteString . fromShort . juxIdBytes
 instance FromJSONKey JuxId where
-  fromJSONKey = FromJSONKeyText $ JuxId . encodeUtf8
+  fromJSONKey = FromJSONKeyText $ JuxId . toShort . encodeUtf8
 instance ToJSONKey JuxId where
-  toJSONKey = toJSONKeyText $ decodeUtf8 . juxIdBytes
+  toJSONKey = toJSONKeyText $ decodeUtf8 . fromShort . juxIdBytes
 
 data JuxKey a = JuxKey
   { juxType :: a
@@ -131,7 +131,8 @@ instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
     where
       go l = (l,) . withObject "JuxRawIdMap" (readInnerMap l)
       readInnerMap l = fmap HM.fromList . traverse (readPair l) . HM.toList
-      readPair l (k,v) = sequence (JuxId $ encodeUtf8 k, juxLabelValueParseJSON l v)
+      readPair l (k,v) = sequence
+        ( JuxId . toShort $ encodeUtf8 k, juxLabelValueParseJSON l v )
       readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
       sequenceFst = fmap swap . sequence . swap
 
