@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Parli.Jux.Core.Types
 ( JuxValue, JuxLabel, JuxEntityType(..), JuxQueryType(..), JuxStoreType
-, JuxId(..), JuxKey(..), JuxMap
+, JuxId, JuxKey(..), JuxMap
 , JuxAttributes', JuxEntities', JuxQueries', JuxResponses', JuxTypes'
 , JuxStore'(..)
 , JuxWireMap(..), JuxLabelValue(..)
@@ -16,10 +16,7 @@ import Codec.Serialise
 import Data.Aeson.Types
 import Data.Tuple
 import Parli.Jux.Internal
-
-import Data.Aeson.Encoding.Internal
-import Data.Binary.Builder
-import Data.Text.Encoding -- unneeded for decodeUtf8'
+import Parli.KeyText
 
 type JuxValue a = (Eq a, Show a, ToJSON a, FromJSON a, NFData a)
 type JuxLabel a = (JuxValue a, Ord a, Hashable a, Read a, ToJSONKey a, FromJSONKey a)
@@ -53,21 +50,7 @@ type JuxWireType e q =
   , JuxLabelValue q (JuxQueryResponse q)
   )
 
-newtype JuxId = JuxId { juxIdBytes :: ShortByteString }
-  deriving newtype (Eq, Ord, Show, Read, Typeable, IsString, Hashable, NFData, Serialise)
-instance Display JuxId where
-  display = displayBytesUtf8 . fromShort . juxIdBytes
-instance FromJSON JuxId where
-  parseJSON = fmap (JuxId . toShort . encodeUtf8) . parseJSON
-instance ToJSON JuxId where
-  toJSON = toJSON . decodeUtf8 . fromShort . juxIdBytes -- throws on failed decode!
-  -- toJSON = toJSON . either (const "") id . fromShort . decodeUtf8'
-  toEncoding = Encoding . fromByteString . fromShort . juxIdBytes
-instance FromJSONKey JuxId where
-  fromJSONKey = FromJSONKeyText $ JuxId . toShort . encodeUtf8
-instance ToJSONKey JuxId where
-  toJSONKey = toJSONKeyText $ decodeUtf8 . fromShort . juxIdBytes
-
+type JuxId = KeyText
 data JuxKey a = JuxKey
   { juxType :: a
   , juxId   :: JuxId
@@ -131,8 +114,7 @@ instance (JuxLabelValue l v) => FromJSON (JuxWireMap l v) where
     where
       go l = (l,) . withObject "JuxRawIdMap" (readInnerMap l)
       readInnerMap l = fmap HM.fromList . traverse (readPair l) . HM.toList
-      readPair l (k,v) = sequence
-        ( JuxId . toShort $ encodeUtf8 k, juxLabelValueParseJSON l v )
+      readPair l (k,v) = sequence (textKey k, juxLabelValueParseJSON l v)
       readJuxLabelMaybe = either (const Nothing) Just . readJuxLabel undefined
       sequenceFst = fmap swap . sequence . swap
 

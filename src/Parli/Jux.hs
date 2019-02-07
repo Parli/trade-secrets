@@ -11,12 +11,13 @@ import qualified RIO.HashSet as HS
 import Parli.Jux.Core
 import Parli.Jux.Internal
 import Parli.Jux.Unwrap
+import Parli.KeyText
 
 -- convenient constructors
 badJuxId :: JuxId
-badJuxId = JuxId ""
+badJuxId = mempty
 isBadJuxId :: JuxId -> Bool
-isBadJuxId (JuxId bs) = bs == ""
+isBadJuxId = isNullKey
 
 juxStorable :: (Hashable a) => JuxKey a -> b -> JuxMap a b Identity
 juxStorable k = HM.singleton k . Identity

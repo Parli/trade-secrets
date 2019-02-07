@@ -17,6 +17,7 @@ dependencies:
 
 - aeson
 - binary
+- bytestring
 - casing
 - cassava
 - clock
