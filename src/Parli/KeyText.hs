@@ -17,28 +17,19 @@ import Data.Binary.Builder
 import Data.Text.Encoding
 
 newtype KeyText = KeyText ShortByteString
-  deriving newtype
-  ( Eq, Ord, Read, Show, Typeable
-  , Semigroup, Monoid, NFData
-  , Serialise, Hashable
-  )
-
+  deriving stock (Read, Show, Data, Typeable, Generic)
+  deriving newtype (Eq, Ord, Semigroup, Monoid, NFData, Serialise, Hashable)
 instance IsString KeyText where
   fromString = stringKey
-
 instance Display KeyText where
   display = displayBytesUtf8 . keyBytes
-
 instance FromJSON KeyText where
   parseJSON = fmap textKey . parseJSON
-
 instance ToJSON KeyText where
   toJSON = toJSON . keyText
   toEncoding = Encoding . fromByteString . keyBytes
-
 instance FromJSONKey KeyText where
   fromJSONKey = FromJSONKeyText textKey
-
 instance ToJSONKey KeyText where
   toJSONKey = toJSONKeyText keyText
 
