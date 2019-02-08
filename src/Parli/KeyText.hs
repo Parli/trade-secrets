@@ -20,6 +20,7 @@ newtype KeyText = KeyText ShortByteString
   deriving stock (Read, Show, Data, Typeable, Generic)
   deriving newtype (Eq, Ord, Semigroup, Monoid, NFData, Serialise, Hashable)
 instance IsString KeyText where
+  -- don't derive this! https://github.com/haskell/bytestring/issues/140
   fromString = stringKey
 instance Display KeyText where
   display = displayBytesUtf8 . keyBytes
