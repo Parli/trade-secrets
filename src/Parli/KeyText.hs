@@ -9,6 +9,7 @@ import RIO
 
 import qualified RIO.Text as T
 import qualified Data.ByteString.Short as SB
+import qualified Data.ByteString.Char8 as B8
 
 import Codec.Serialise
 import Data.Aeson.Encoding.Internal
@@ -28,7 +29,8 @@ instance FromJSON KeyText where
   parseJSON = fmap textKey . parseJSON
 instance ToJSON KeyText where
   toJSON = toJSON . keyText
-  toEncoding = Encoding . fromByteString . keyBytes
+  toEncoding
+    = Encoding . fromByteString . flip B8.snoc '"' . B8.cons '"' . keyBytes
 instance FromJSONKey KeyText where
   fromJSONKey = FromJSONKeyText textKey
 instance ToJSONKey KeyText where
