@@ -14,7 +14,7 @@ instance Show StatsDEnv where
 makeRioClassOnly ''StatsDEnv
 class HasDogStatsSettings env where
   dogStatsSettingsL :: Lens' env StatsD.DogStatsSettings
-instance HasStatsDEnv env => HasDogStatsSettings env where
+instance {-# OVERLAPPABLE #-} HasStatsDEnv env => HasDogStatsSettings env where
   dogStatsSettingsL = statsDEnvL . lens getStatsDEnv (const StatsDEnv)
 
 type MonadStatsD env m =
